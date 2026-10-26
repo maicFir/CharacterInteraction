@@ -23,6 +23,7 @@ async def health(services: ServiceDependency):
     cfg = services.settings
     return {
         "status": "ok",
+        "environment": cfg.app_env,
         "llm_configured": cfg.llm_ready,
         "llm_provider": cfg.llm_provider,
         "stt": cfg.stt_provider,

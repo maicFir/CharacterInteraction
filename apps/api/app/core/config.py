@@ -6,9 +6,12 @@ from typing import Literal
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+API_ROOT = Path(__file__).resolve().parents[2]
+
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+    model_config = SettingsConfigDict(env_file=None, extra="ignore")
+    app_env: Literal["development", "test", "production"] = "development"
     allowed_origins: str = "http://localhost:3000,http://127.0.0.1:3000"
     llm_provider: Literal["openrouter", "compatible", "ollama"] = "openrouter"
     openrouter_api_key: str = ""
@@ -50,5 +53,16 @@ def load_settings():
     if path:
         # Production configuration arrives as a read-only JSON secret, not shell code.
         values = json.loads(Path(path).read_text())
-        return Settings(**{key.lower(): value for key, value in values.items()})
-    return Settings()
+        data = {key.lower(): value for key, value in values.items()}
+        return Settings(_env_file=None, **{**data, "app_env": "production"})
+    environment = os.environ.get("APP_ENV", "development")
+    if environment not in {"development", "test", "production"}:
+        raise ValueError("APP_ENV must be development, test or production")
+    settings = Settings(
+        _env_file=(API_ROOT / ".env", API_ROOT / f".env.{environment}"),
+        app_env=environment,
+    )
+    # Relative local paths never depend on the caller's working directory.
+    if not Path(settings.piper_model).is_absolute():
+        settings.piper_model = str((API_ROOT / settings.piper_model).resolve())
+    return settings

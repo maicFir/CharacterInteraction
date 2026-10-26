@@ -35,12 +35,20 @@ docker compose -f infra/compose.yml up --build
 ```bash
 cd apps/api
 uv sync --frozen --extra local --python 3.12
-cp .env.example .env
+cp .env.development.example .env.development
 ```
 
-在 `apps/api/.env` 填入自己的 `OPENROUTER_API_KEY` 与 `OPENROUTER_MODEL`；模型 ID 由部署者决定。默认非流式调用 OpenRouter，JSON 提示词 + Pydantic 校验；若选择支持严格 JSON Schema 的模型，可启用 `OPENROUTER_STRUCTURED=true`。
+在 `apps/api/.env.development` 填入自己的 `OPENROUTER_API_KEY` 与 `OPENROUTER_MODEL`；模型 ID 由部署者决定。默认非流式调用 OpenRouter，JSON 提示词 + Pydantic 校验；若选择支持严格 JSON Schema 的模型，可启用 `OPENROUTER_STRUCTURED=true`。
 
-`.env` 中的 `ALLOWED_ORIGINS` 必须包含前端实际地址，端口也要一致；默认例子包含 3000、3002。API 还需要系统安装 FFmpeg。
+`.env.development` 中的 `ALLOWED_ORIGINS` 必须包含前端实际地址，端口也要一致；默认例子包含 3000、3002。API 还需要系统安装 FFmpeg。
+
+### 本地与生产配置规则
+
+本地实际使用 `apps/api/.env.development`，仓库仅提交 `.env.development.example`。首次克隆复制示例；已有文件不要覆盖。字段与生产 GitHub Actions 配置一致，本地 CORS 使用 localhost 地址，模型密钥/模型 ID 填真实值。
+
+默认 `APP_ENV=development`，配置顺序为类默认值 → `apps/api/.env` → `apps/api/.env.development` → 系统环境变量。可通过进程环境 `APP_ENV=production` 选择 `.env.production`。修改 dotenv 后需要重启后端。配置目录固定在 `apps/api`，不依赖启动命令当前目录；相对 Piper 模型路径也按后端目录解析。
+
+生产设置 `APP_CONFIG_FILE` 后只读取服务器只读 JSON，不读取本地 dotenv；它由 GitHub Secrets/Variables 生成。`/api/health` 返回 environment 和配置就绪标志，不返回密钥。
 
 ### 2. 准备免费的本地语音
 
@@ -57,8 +65,8 @@ MODEL_DIR="$PWD/models" apps/api/.venv/bin/python scripts/prepare_models.py
 ### 3. 启动
 
 ```bash
-# 终端一，在 apps/api
-uv run --frozen uvicorn app.main:app --host 0.0.0.0 --port 8000
+# 终端一，在仓库根目录；自动读取 apps/api/.env.development
+corepack pnpm dev:api
 
 # 终端二，在仓库根目录
 cp apps/web/.env.example apps/web/.env.local
@@ -120,7 +128,7 @@ corepack pnpm check  # 格式、ESLint、类型、测试、生产构建
 cd apps/api && uv run --frozen pytest -q
 ```
 
-本次本地已验证：Next.js 生产构建、Mock 音频可加载、9 项前端测试、15 项后端测试、桌面浏览器文字/音频/照片事件以及输入框聚焦样式。后端测试使用确定性的模拟模型服务和 HTTP transport，**不代表已经调用真实 OpenRouter**。
+本次本地已验证：Next.js 生产构建、Mock 音频可加载、9 项前端测试、19 项后端测试、桌面浏览器文字/音频/照片事件以及输入框聚焦样式。后端测试使用确定性的模拟模型服务和 HTTP transport，**不代表已经调用真实 OpenRouter**。
 
 本地免费 STT/TTS 已实际验证通过（Piper → WAV → FFmpeg → Whisper），中文人名仍可能识别不准。可复现：
 

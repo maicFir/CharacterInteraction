@@ -1,7 +1,13 @@
 import type { Reply } from '../../features/scene/model/turns';
 
 export type Session = { id: string; token: string; epoch: string };
-export type BackendHealth = { status: string; llm_configured: boolean; stt: string; tts: string };
+export type BackendHealth = {
+  status: string;
+  environment: string;
+  llm_configured: boolean;
+  stt: string;
+  tts: string;
+};
 export type AcceptedTurn = { accepted: boolean; turn_id: number };
 export type TextRequest = { session: Session; turnId: number; text: string; signal: AbortSignal };
 export type AudioRequest = { session: Session; form: FormData; signal: AbortSignal };

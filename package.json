@@ -7,6 +7,7 @@
   },
   "scripts": {
     "dev": "pnpm --dir apps/web dev",
+    "dev:api": "uv run --project apps/api --python 3.12 --frozen --extra local uvicorn app.main:app --app-dir apps/api --host 127.0.0.1 --port 8000 --reload --reload-dir apps/api/app",
     "build": "pnpm --dir apps/web build",
     "typecheck": "pnpm --dir apps/web typecheck",
     "lint": "pnpm --dir apps/web lint",
