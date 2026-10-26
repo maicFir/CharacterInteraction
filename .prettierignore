@@ -1,0 +1,12 @@
+node_modules
+.next
+.venv
+models
+tmp
+output
+pnpm-lock.yaml
+apps/api
+apps/web/public
+.agents
+.claude
+skills-lock.json

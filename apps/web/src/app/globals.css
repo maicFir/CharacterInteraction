@@ -1,0 +1,1139 @@
+@import 'tailwindcss';
+
+:root {
+  --cream: #f0e8d6;
+  --dim: #acae9e;
+  --gold: #d6bb7d;
+  --ink: #17221f;
+  --line: rgba(235, 229, 209, 0.16);
+}
+* {
+  box-sizing: border-box;
+}
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+  background: #10201e;
+  color: var(--cream);
+  font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+}
+button,
+input {
+  font: inherit;
+}
+button,
+a,
+input {
+  -webkit-tap-highlight-color: transparent;
+}
+button {
+  cursor: pointer;
+}
+button:disabled {
+  cursor: default;
+  opacity: 0.4;
+}
+button:focus-visible,
+a:focus-visible,
+input:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 5px;
+}
+button {
+  color: inherit;
+}
+a {
+  color: inherit;
+  text-decoration: none;
+}
+svg {
+  width: 21px;
+  height: 21px;
+  flex-shrink: 0;
+}
+.experience {
+  position: relative;
+  isolation: isolate;
+  min-height: 900px;
+  height: 100svh;
+  overflow: hidden;
+  background: #152724;
+}
+.scene-art {
+  position: absolute;
+  inset: 0;
+  background: url('/art/cafe.svg') center center/cover no-repeat;
+  z-index: -5;
+  transition:
+    transform 2s,
+    filter 2s;
+}
+.rain-close .scene-art {
+  transform: scale(1.08) translateX(-1%);
+  filter: saturate(0.8);
+}
+.scene-vignette {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background:
+    linear-gradient(90deg, rgba(12, 25, 23, 0.76), transparent 54%),
+    linear-gradient(
+      0deg,
+      #12221f 0%,
+      rgba(17, 32, 29, 0.98) 13%,
+      rgba(13, 26, 24, 0.6) 36%,
+      transparent 70%
+    ),
+    linear-gradient(180deg, rgba(11, 22, 20, 0.65), transparent 20%);
+  pointer-events: none;
+}
+.masthead {
+  height: 116px;
+  padding: 38px 4.5%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: relative;
+  z-index: 12;
+}
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  font-size: 20px;
+  letter-spacing: 3px;
+  font-family: 'Songti SC', 'Noto Serif CJK SC', serif;
+}
+.brand small {
+  display: block;
+  font-family: Georgia, serif;
+  font-size: 9px;
+  letter-spacing: 4.5px;
+  color: var(--dim);
+  margin-top: 6px;
+}
+.brand-symbol {
+  display: grid;
+  place-items: center;
+  width: 43px;
+  height: 43px;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  color: var(--gold);
+}
+.brand-symbol svg {
+  width: 23px;
+  height: 23px;
+}
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 25px;
+}
+.mode-control {
+  display: flex;
+  gap: 11px;
+  align-items: center;
+  font-size: 12px;
+}
+.mode-label {
+  font-family: Georgia, serif;
+  font-size: 11px;
+  letter-spacing: 2px;
+  color: var(--dim);
+}
+.mode-value {
+  min-width: 24px;
+  color: #d8d9c8;
+}
+.toggle {
+  border: 1px solid #5c6a5f;
+  background: #2b3931;
+  width: 36px;
+  height: 21px;
+  border-radius: 20px;
+  padding: 3px;
+}
+.toggle span {
+  width: 13px;
+  height: 13px;
+  background: #b9c2ae;
+  display: block;
+  border-radius: 50%;
+  transition: transform 0.2s;
+}
+.toggle.on {
+  background: #647654;
+}
+.toggle.on span {
+  transform: translateX(14px);
+  background: #f2e8c8;
+}
+.icon-button {
+  display: grid;
+  place-items: center;
+  width: 35px;
+  height: 35px;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  background: transparent;
+  color: #c7cbbb;
+}
+.icon-button:hover {
+  background: #e9dcbe13;
+}
+.scene-intro {
+  position: absolute;
+  left: 9%;
+  top: 25%;
+  width: 350px;
+  z-index: 1;
+}
+.eyebrow {
+  font:
+    10px Georgia,
+    serif;
+  letter-spacing: 2.4px;
+  color: var(--gold);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.eyebrow > span {
+  width: 23px;
+  height: 1px;
+  background: var(--gold);
+}
+h1 {
+  font:
+    normal clamp(38px, 4vw, 62px)/1.55 'Songti SC',
+    'Noto Serif CJK SC',
+    serif;
+  letter-spacing: 4px;
+  margin: 22px 0;
+}
+.scene-intro > p {
+  color: #bcc0b0;
+  font-size: 13px;
+  line-height: 2.2;
+  letter-spacing: 1.5px;
+}
+.intro-rule {
+  height: 1px;
+  width: 48px;
+  background: var(--line);
+  margin: 29px 0 19px;
+}
+.scene-number {
+  color: #929e8b;
+  font-size: 10px;
+  letter-spacing: 3px;
+}
+.location {
+  position: absolute;
+  right: 6%;
+  top: 144px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #c5c7b4;
+  font-size: 11px;
+  letter-spacing: 1px;
+}
+.location svg {
+  width: 17px;
+}
+.location-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--gold);
+}
+.location-divider {
+  height: 12px;
+  background: var(--line);
+  width: 1px;
+  margin: 0 3px;
+}
+.character-stage {
+  position: absolute;
+  left: 60%;
+  transform: translateX(-50%);
+  bottom: 230px;
+  width: 470px;
+  height: 705px;
+  z-index: -2;
+}
+.character-glow {
+  position: absolute;
+  inset: 18% -20% -5%;
+  background: radial-gradient(ellipse, #bca96b16, transparent 65%);
+}
+.actor {
+  position: absolute;
+  inset: 0;
+  background-image: url('/art/mira-sprites.svg');
+  background-repeat: no-repeat;
+  background-size: 600% 700%;
+  background-position: 0% var(--sprite-row);
+  filter: drop-shadow(10px 15px 18px #0006);
+}
+.actor.animated {
+  animation: frames 1.05s steps(6) infinite;
+}
+.actor-failed {
+  display: none;
+}
+@keyframes frames {
+  to {
+    background-position-x: 120%;
+  }
+}
+.portrait-fallback {
+  padding: 160px 50px;
+  text-align: center;
+  font:
+    100px Georgia,
+    serif;
+  color: #bca777;
+}
+.portrait-fallback span {
+  display: block;
+  font: 13px/2 sans-serif;
+}
+.table-foreground {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 260px;
+  height: 40px;
+  background: linear-gradient(180deg, #68543d55, #1a292400);
+  z-index: -2;
+  transform: skewY(-1deg);
+}
+.conversation {
+  position: absolute;
+  bottom: 35px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(760px, calc(100% - 60px));
+  z-index: 5;
+}
+.character-label {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  font:
+    23px Georgia,
+    serif;
+  letter-spacing: 1px;
+}
+.presence {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--gold);
+  box-shadow: 0 0 10px #b8ad6b66;
+  margin-right: 2px;
+}
+.presence.listening {
+  background: #a9cea1;
+  animation: pulse 1s infinite;
+}
+.presence.thinking {
+  background: #b8b19a;
+  animation: pulse 2s infinite;
+}
+.presence.speaking {
+  background: #dabc7d;
+  animation: pulse 0.8s infinite;
+}
+.role-description {
+  font: 10px sans-serif;
+  color: #a5ad99;
+  letter-spacing: 2px;
+  margin-left: 3px;
+}
+.phase-badge {
+  font: 10px sans-serif;
+  letter-spacing: 1px;
+  border: 1px solid #b6c2a533;
+  border-radius: 3px;
+  color: #b4c2aa;
+  padding: 4px 7px;
+  margin-left: auto;
+}
+.subtitle {
+  min-height: 76px;
+  margin: 14px 0 5px;
+  border-left: 1px solid #b8a37655;
+  padding: 1px 0 1px 20px;
+  display: flex;
+  align-items: center;
+}
+.subtitle p {
+  font:
+    17px/1.95 'Songti SC',
+    'Noto Serif CJK SC',
+    serif;
+  letter-spacing: 1px;
+  color: #c6cebb;
+  margin: 0;
+}
+.subtitle.has-text p {
+  color: #eee7d4;
+}
+.your-words {
+  margin: 5px 0 20px;
+  color: #879785;
+  font-size: 11px;
+  letter-spacing: 1px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 95%;
+}
+.placeholder {
+  opacity: 0.8;
+}
+.suggestions {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 19px;
+}
+.suggestions button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 7px;
+  font-size: 11px;
+  letter-spacing: 0.5px;
+  border: 1px solid #e8e5d221;
+  background: #293a3066;
+  padding: 11px 13px;
+  border-radius: 4px;
+  flex: 1;
+  white-space: nowrap;
+  color: #c7cbb8;
+  transition: background 0.2s;
+}
+.suggestions button:hover {
+  background: #62705144;
+}
+.suggestions button > span {
+  font:
+    9px Georgia,
+    serif;
+  color: #899780;
+}
+.suggestions svg {
+  width: 14px;
+  height: 14px;
+  color: #8d9c86;
+}
+.composer {
+  display: flex;
+  gap: 12px;
+}
+.input-wrap {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  align-items: center;
+  border: 1px solid #d3dcc32c;
+  background: #10221eaa;
+  border-radius: 6px;
+  padding: 5px 9px 5px 17px;
+}
+.input-spark {
+  color: var(--gold);
+  font-size: 21px;
+  margin-right: 13px;
+}
+.input-wrap input {
+  height: 44px;
+  width: 100%;
+  background: none;
+  border: 0;
+  color: var(--cream);
+  font-size: 13px;
+  letter-spacing: 1px;
+  outline-offset: 0;
+}
+.input-wrap input::placeholder {
+  color: #7d907b;
+}
+.send-button {
+  display: grid;
+  place-items: center;
+  background: #e3d9ac0c;
+  border: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: 4px;
+  color: #c0caab;
+}
+.mic-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  border: 1px solid #d9d8b267;
+  background: #b9c4a0;
+  color: #1b3027;
+  border-radius: 6px;
+  padding: 0 20px;
+  white-space: nowrap;
+  font-size: 12px;
+  letter-spacing: 1px;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.mic-button:hover {
+  background: #ced5b4;
+}
+.mic-button.recording {
+  background: #c5ac76;
+  color: #222d1e;
+  animation: pulse 1s infinite;
+}
+.interaction-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 17px;
+  color: #87957e;
+  font-size: 9px;
+  letter-spacing: 1px;
+  min-height: 23px;
+}
+.connection-status {
+  display: flex;
+  gap: 7px;
+  align-items: center;
+}
+.connection-status i {
+  display: inline-block;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #a98666;
+}
+.connection-status i.connected {
+  background: #9ab786;
+}
+.playback-actions {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+.playback-actions button {
+  border: 0;
+  background: none;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  color: #adb79c;
+}
+.playback-actions svg {
+  width: 17px;
+  height: 17px;
+}
+.scene-credit {
+  position: absolute;
+  left: 4.5%;
+  bottom: 42px;
+  writing-mode: vertical-rl;
+  font:
+    8px Georgia,
+    serif;
+  letter-spacing: 3px;
+  color: #687e6c;
+}
+.thinking-dots {
+  display: flex;
+  gap: 4px;
+  margin-left: 12px;
+}
+.thinking-dots i {
+  width: 3px;
+  height: 3px;
+  background: var(--gold);
+  border-radius: 50%;
+  animation: pulse 1.2s infinite;
+}
+.thinking-dots i:nth-child(2) {
+  animation-delay: 0.2s;
+}
+.thinking-dots i:nth-child(3) {
+  animation-delay: 0.4s;
+}
+@keyframes pulse {
+  50% {
+    opacity: 0.45;
+  }
+}
+.photo-card {
+  position: absolute;
+  right: 8%;
+  bottom: 380px;
+  width: 180px;
+  background: #ede4cb;
+  padding: 10px 10px 14px;
+  color: #4a5747;
+  transform: rotate(7deg);
+  box-shadow: 0 20px 50px #0005;
+  z-index: 4;
+  animation: photo-in 0.5s ease-out;
+}
+.photo-card > img {
+  width: 100%;
+  height: 130px;
+  object-fit: cover;
+}
+.photo-card > div {
+  font:
+    14px 'Songti SC',
+    serif;
+  margin: 12px 2px 0;
+}
+.photo-card span {
+  display: block;
+  font:
+    8px Georgia,
+    serif;
+  letter-spacing: 2px;
+  margin-top: 8px;
+}
+.photo-close {
+  position: absolute;
+  right: -10px;
+  top: -10px;
+  background: #344338;
+  border: 1px solid #a9ba9a44;
+  border-radius: 50%;
+  padding: 4px;
+  display: grid;
+  place-items: center;
+  color: #e5e5cb;
+}
+.photo-close svg {
+  width: 15px;
+  height: 15px;
+}
+@keyframes photo-in {
+  from {
+    opacity: 0;
+    transform: translateY(20px) rotate(0);
+  }
+}
+.error-message {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  padding: 10px 13px;
+  border: 1px solid #cbab7544;
+  border-radius: 4px;
+  background: #443a27df;
+  color: #e5cfaa;
+  font-size: 11px;
+  line-height: 1.7;
+}
+.error-message button {
+  white-space: nowrap;
+  text-decoration: underline;
+  border: 0;
+  background: transparent;
+}
+.entry-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  display: grid;
+  place-items: center;
+  background: #0e1b1880;
+  backdrop-filter: blur(8px);
+}
+.entry-card {
+  padding: 40px 50px 35px;
+  width: min(460px, 90%);
+  text-align: center;
+  background: linear-gradient(150deg, #263a32ed, #12251fee);
+  border: 1px solid #d5d2ae33;
+  box-shadow: 0 20px 120px #0004;
+  border-radius: 3px;
+}
+.entry-card .eyebrow {
+  justify-content: center;
+  font-size: 9px;
+}
+.entry-star {
+  display: block;
+  font-size: 31px;
+  color: var(--gold);
+  margin-top: 30px;
+}
+.entry-card h2 {
+  font:
+    30px 'Songti SC',
+    serif;
+  font-weight: normal;
+  letter-spacing: 2px;
+  margin: 26px 0 20px;
+}
+.entry-card p {
+  font-size: 12px;
+  line-height: 2.3;
+  letter-spacing: 1px;
+  color: #b4c1a9;
+}
+.enter-button {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 23px;
+  width: 100%;
+  padding: 17px 20px;
+  background: #c9c39f;
+  color: #24392e;
+  border: 0;
+  border-radius: 3px;
+  margin: 30px 0 18px;
+  font-size: 13px;
+  letter-spacing: 2px;
+}
+.entry-card small {
+  font-size: 9px;
+  line-height: 2.2;
+  color: #879c84;
+  letter-spacing: 0.6px;
+}
+.dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  background: #081610c9;
+  backdrop-filter: blur(9px);
+  display: grid;
+  place-items: center;
+  padding: 20px;
+}
+.details-dialog {
+  max-width: 520px;
+  max-height: 90svh;
+  overflow: auto;
+  border: 1px solid var(--line);
+  background: #1c3028;
+  padding: 38px;
+  position: relative;
+  border-radius: 5px;
+}
+.dialog-close {
+  position: absolute;
+  right: 15px;
+  top: 15px;
+}
+.details-dialog h2 {
+  font:
+    26px/1.5 'Songti SC',
+    serif;
+  margin-top: 25px;
+}
+.details-dialog p,
+.details-dialog dd {
+  font-size: 12px;
+  line-height: 2;
+  color: #aabc9f;
+  margin: 0;
+}
+.details-dialog dl {
+  margin: 20px 0;
+}
+.details-dialog dt {
+  font-size: 12px;
+  color: #dfd8ba;
+  margin: 18px 0 6px;
+}
+.details-dialog .privacy-note {
+  font-size: 10px;
+  border-top: 1px solid var(--line);
+  padding-top: 14px;
+}
+.failure-button {
+  border: 1px solid var(--line);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: transparent;
+  font-size: 11px;
+  padding: 12px;
+  margin-top: 20px;
+}
+.failure-button svg {
+  width: 15px;
+}
+.rain-layer {
+  position: absolute;
+  inset: 0 0 35% 42%;
+  z-index: -3;
+  overflow: hidden;
+  opacity: 0.4;
+  pointer-events: none;
+}
+.rain-layer i {
+  position: absolute;
+  top: -10%;
+  height: 70px;
+  width: 1px;
+  background: linear-gradient(transparent, #bdd5b44a);
+  left: 20%;
+  animation: rain-fall 2.7s linear infinite;
+}
+.rain-layer i:nth-child(2) {
+  left: 45%;
+  animation-delay: 1.2s;
+}
+.rain-layer i:nth-child(3) {
+  left: 65%;
+  animation-delay: 0.4s;
+}
+.rain-layer i:nth-child(4) {
+  left: 82%;
+  animation-delay: 2.1s;
+}
+.rain-layer i:nth-child(5) {
+  left: 30%;
+  animation-delay: 2s;
+}
+.rain-layer i:nth-child(6) {
+  left: 92%;
+  animation-delay: 0.7s;
+}
+@keyframes rain-fall {
+  to {
+    transform: translate(-30px, 900px);
+  }
+}
+@media (min-width: 1600px) {
+  .character-stage {
+    left: 58%;
+    width: 520px;
+    height: 780px;
+  }
+  .scene-intro {
+    left: 13%;
+  }
+  .conversation {
+    bottom: 45px;
+  }
+  .experience {
+    min-height: 960px;
+  }
+}
+@media (max-width: 1100px) {
+  .scene-intro {
+    left: 6%;
+    width: 270px;
+    top: 25%;
+  }
+  .scene-intro h1 {
+    font-size: 40px;
+  }
+  .character-stage {
+    left: 65%;
+    width: 410px;
+    height: 615px;
+    bottom: 290px;
+  }
+  .scene-credit {
+    display: none;
+  }
+  .photo-card {
+    right: 5%;
+    width: 150px;
+    bottom: 390px;
+  }
+}
+@media (max-width: 760px) {
+  .experience {
+    min-height: 740px;
+    height: 100svh;
+  }
+  .masthead {
+    height: 90px;
+    padding: 24px 23px;
+  }
+  .brand {
+    font-size: 17px;
+    gap: 10px;
+  }
+  .brand small {
+    font-size: 7px;
+    letter-spacing: 3px;
+  }
+  .brand-symbol {
+    width: 36px;
+    height: 36px;
+  }
+  .header-actions {
+    gap: 14px;
+  }
+  .mode-control {
+    gap: 7px;
+  }
+  .mode-label {
+    font-size: 9px;
+  }
+  .mode-value {
+    font-size: 10px;
+  }
+  .info-button {
+    width: 29px;
+    height: 29px;
+  }
+  .info-button svg {
+    width: 16px;
+  }
+  .scene-intro {
+    display: none;
+  }
+  .location {
+    top: 110px;
+    right: 24px;
+    font-size: 9px;
+    gap: 7px;
+  }
+  .location svg {
+    width: 14px;
+  }
+  .character-stage {
+    left: 50%;
+    width: 350px;
+    height: 525px;
+    bottom: 265px;
+  }
+  .scene-art {
+    background-position: 58% center;
+  }
+  .scene-vignette {
+    background:
+      linear-gradient(0deg, #14251f 0%, #14251f 14%, #14251fdd 27%, #14251f22 58%, transparent 75%),
+      linear-gradient(180deg, #0b191bbb, transparent 25%);
+  }
+  .conversation {
+    bottom: 19px;
+    width: calc(100% - 42px);
+  }
+  .character-label {
+    font-size: 21px;
+  }
+  .role-description {
+    font-size: 9px;
+  }
+  .subtitle {
+    min-height: 75px;
+    padding-left: 15px;
+    margin-top: 12px;
+  }
+  .subtitle p {
+    font-size: 15px;
+    line-height: 1.9;
+    letter-spacing: 0.6px;
+  }
+  .your-words {
+    font-size: 10px;
+    margin: 6px 0 15px;
+  }
+  .suggestions {
+    gap: 7px;
+    margin-bottom: 13px;
+  }
+  .suggestions button {
+    font-size: 10px;
+    padding: 10px 9px;
+    justify-content: center;
+    white-space: normal;
+    line-height: 1.6;
+  }
+  .suggestions button > span,
+  .suggestions svg {
+    display: none;
+  }
+  .composer {
+    gap: 9px;
+  }
+  .input-wrap {
+    padding-left: 12px;
+  }
+  .input-wrap input {
+    font-size: 12px;
+    height: 42px;
+    letter-spacing: 0;
+  }
+  .input-spark {
+    margin-right: 8px;
+    font-size: 18px;
+  }
+  .mic-button {
+    padding: 0;
+    width: 55px;
+    flex-shrink: 0;
+  }
+  .mic-button span {
+    display: none;
+  }
+  .interaction-footer {
+    font-size: 8px;
+    letter-spacing: 0.2px;
+    margin-top: 13px;
+  }
+  .interrupt-hint {
+    margin-left: auto;
+    margin-right: 15px;
+  }
+  .photo-card {
+    width: 125px;
+    right: 20px;
+    bottom: 350px;
+    transform: rotate(7deg);
+    padding: 7px;
+  }
+  .photo-card > img {
+    height: 95px;
+  }
+  .photo-card > div {
+    font-size: 12px;
+    margin-top: 9px;
+  }
+  .photo-card span {
+    font-size: 7px;
+    letter-spacing: 1px;
+  }
+  .table-foreground {
+    bottom: 300px;
+  }
+  .entry-card {
+    padding: 32px 26px;
+  }
+  .entry-card h2 {
+    font-size: 27px;
+  }
+  .details-dialog {
+    padding: 30px 25px;
+  }
+  .details-dialog h2 {
+    font-size: 23px;
+  }
+  .rain-layer {
+    inset-left: 0;
+  }
+  .error-message {
+    font-size: 10px;
+  }
+  .weather-label {
+    display: none;
+  }
+}
+@media (max-height: 760px) and (max-width: 760px) {
+  .experience {
+    min-height: 660px;
+  }
+  .character-stage {
+    height: 450px;
+    width: 300px;
+    bottom: 235px;
+  }
+  .location {
+    top: 96px;
+  }
+  .conversation {
+    bottom: 15px;
+  }
+  .subtitle {
+    min-height: 65px;
+  }
+  .suggestions {
+    margin-bottom: 10px;
+  }
+  .interaction-footer {
+    margin-top: 10px;
+  }
+  .masthead {
+    padding-top: 19px;
+  }
+  .your-words {
+    margin-bottom: 12px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+/* Keep the composer's existing frame; do not draw a second frame around its text field. */
+.input-wrap input:focus,
+.input-wrap input:focus-visible {
+  outline: none;
+  box-shadow: none;
+}
+
+@media (min-width: 761px) and (max-height: 850px) {
+  .experience {
+    min-height: 650px;
+  }
+  .masthead {
+    height: 90px;
+    padding-top: 25px;
+    padding-bottom: 25px;
+  }
+  .location {
+    top: 106px;
+  }
+  .character-stage {
+    width: 350px;
+    height: 525px;
+    bottom: 205px;
+  }
+  .scene-intro {
+    top: 22%;
+    width: 270px;
+  }
+  .scene-intro h1 {
+    font-size: 38px;
+    line-height: 1.5;
+    margin: 16px 0;
+  }
+  .scene-intro > p {
+    font-size: 11px;
+    line-height: 1.9;
+  }
+  .intro-rule,
+  .scene-number {
+    display: none;
+  }
+  .conversation {
+    bottom: 23px;
+  }
+  .subtitle {
+    min-height: 60px;
+    margin-top: 10px;
+  }
+  .your-words {
+    margin-bottom: 13px;
+  }
+  .suggestions {
+    margin-bottom: 13px;
+  }
+  .photo-card {
+    bottom: 330px;
+  }
+}

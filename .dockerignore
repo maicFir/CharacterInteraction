@@ -1,0 +1,14 @@
+.git
+**/node_modules
+**/.next
+**/.venv
+**/__pycache__
+**/.env
+**/.env.local
+/models
+/apps/api/models
+tmp
+output
+*.pdf
+.DS_Store
+infra/runtime.json

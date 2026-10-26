@@ -1,0 +1,102 @@
+name: Deploy production
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: production-deploy
+  cancel-in-progress: false
+jobs:
+  checks:
+    uses: ./.github/workflows/ci.yml
+  backend:
+    needs: checks
+    if: vars.DEPLOY_BACKEND == 'true' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      - name: Prepare server configuration without logging secrets
+        env:
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          OPENROUTER_MODEL: ${{ vars.OPENROUTER_MODEL }}
+          OPENROUTER_STRUCTURED: ${{ vars.OPENROUTER_STRUCTURED }}
+          ALLOWED_ORIGINS: ${{ vars.ALLOWED_ORIGINS }}
+          STT_PROVIDER: ${{ vars.STT_PROVIDER }}
+          STT_BASE_URL: ${{ vars.STT_BASE_URL }}
+          STT_MODEL: ${{ vars.STT_MODEL }}
+          STT_API_KEY: ${{ secrets.STT_API_KEY }}
+          TTS_PROVIDER: ${{ vars.TTS_PROVIDER }}
+          TTS_BASE_URL: ${{ vars.TTS_BASE_URL }}
+          TTS_MODEL: ${{ vars.TTS_MODEL }}
+          TTS_VOICE: ${{ vars.TTS_VOICE }}
+          TTS_API_KEY: ${{ secrets.TTS_API_KEY }}
+          WHISPER_MODEL: ${{ vars.WHISPER_MODEL }}
+          TURN_TIMEOUT: ${{ vars.TURN_TIMEOUT }}
+          API_DOMAIN: ${{ vars.API_DOMAIN }}
+          HF_ENDPOINT: ${{ vars.HF_ENDPOINT }}
+          MANAGED_HTTPS: ${{ vars.MANAGED_HTTPS }}
+        run: python3 scripts/write_deploy_config.py
+      - name: Configure pinned SSH host and deploy key
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          SSH_KNOWN_HOSTS: ${{ secrets.SSH_KNOWN_HOSTS }}
+        run: |
+          python3 - <<'PY'
+          import os
+          from pathlib import Path
+          ssh=Path.home()/'.ssh'
+          ssh.mkdir(mode=0o700,exist_ok=True)
+          for name,key in [('id_ed25519','SSH_PRIVATE_KEY'),('known_hosts','SSH_KNOWN_HOSTS')]:
+              value=os.environ.get(key,'')
+              if not value.strip(): raise SystemExit(f'Missing secret: {key}')
+              path=ssh/name
+              path.write_text(value.rstrip()+'\n')
+              path.chmod(0o600)
+          PY
+      - name: Upload and deploy versioned backend release
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_PORT: ${{ secrets.SSH_PORT }}
+        run: |
+          set -euo pipefail
+          SSH_PORT="${SSH_PORT:-22}"
+          [[ "$SSH_HOST" =~ ^[a-zA-Z0-9.-]+$ ]] || exit 1
+          [[ "$SSH_USER" =~ ^[a-zA-Z_][a-zA-Z0-9_-]*$ ]] || exit 1
+          [[ "$SSH_PORT" =~ ^[0-9]+$ ]] || exit 1
+          trap 'rm -f deploy.tgz infra/runtime.json infra/domain.env' EXIT
+          tar --exclude='.venv' --exclude='__pycache__' --exclude='.pytest_cache' --exclude='.env*' --exclude='models' -czf deploy.tgz apps/api/app apps/api/pyproject.toml apps/api/uv.lock infra/Dockerfile.api infra/compose.server.yml infra/Caddyfile infra/runtime.json infra/domain.env scripts/prepare_models.py
+          chmod 600 deploy.tgz
+          scp -o BatchMode=yes -o StrictHostKeyChecking=yes -P "$SSH_PORT" deploy.tgz "$SSH_USER@$SSH_HOST:/tmp/after-rain-$GITHUB_SHA.tgz"
+          ssh -o BatchMode=yes -o StrictHostKeyChecking=yes -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" bash -s -- "$GITHUB_SHA" "$GITHUB_RUN_ID" < scripts/deploy_remote.sh
+  vercel:
+    needs: checks
+    if: vars.DEPLOY_VERCEL == 'true' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+    runs-on: ubuntu-latest
+    environment: production
+    env:
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      NEXT_PUBLIC_API_URL: ${{ vars.NEXT_PUBLIC_API_URL }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.33.4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: pnpm install --frozen-lockfile
+      - name: Check Vercel configuration
+        run: |
+          test -n "$VERCEL_TOKEN"
+          test -n "$VERCEL_ORG_ID"
+          test -n "$VERCEL_PROJECT_ID"
+          test -n "$NEXT_PUBLIC_API_URL"
+      - run: npx --yes vercel@latest pull --yes --environment=production --token="$VERCEL_TOKEN"
+      - run: npx --yes vercel@latest build --prod --token="$VERCEL_TOKEN"
+      - run: npx --yes vercel@latest deploy --prebuilt --prod --token="$VERCEL_TOKEN"

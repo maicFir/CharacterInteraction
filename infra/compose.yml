@@ -1,0 +1,23 @@
+name: after-rain-local
+services:
+  web:
+    build:
+      context: ..
+      dockerfile: infra/Dockerfile.web
+      args:
+        NEXT_PUBLIC_API_URL: http://localhost:8000
+    ports:
+      - "3000:3000"
+  api:
+    build:
+      context: ..
+      dockerfile: infra/Dockerfile.api
+    ports:
+      - "8000:8000"
+    environment:
+      ALLOWED_ORIGINS: http://localhost:3000
+      PIPER_MODEL: /models/piper/zh_CN-huayan-medium.onnx
+    volumes:
+      - models:/models
+volumes:
+  models:

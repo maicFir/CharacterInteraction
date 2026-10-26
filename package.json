@@ -1,0 +1,24 @@
+{
+  "name": "after-rain",
+  "private": true,
+  "packageManager": "pnpm@10.33.4",
+  "engines": {
+    "node": "^22.13.0 || >=24.0.0"
+  },
+  "scripts": {
+    "dev": "pnpm --dir apps/web dev",
+    "build": "pnpm --dir apps/web build",
+    "typecheck": "pnpm --dir apps/web typecheck",
+    "lint": "pnpm --dir apps/web lint",
+    "lint:fix": "pnpm --dir apps/web lint:fix",
+    "check": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test && pnpm build",
+    "test": "pnpm --dir apps/web test",
+    "format": "prettier --write apps/web/src apps/web/tests",
+    "format:check": "prettier --check apps/web/src apps/web/tests",
+    "start:mock": "docker compose -f infra/compose.yml up --build",
+    "assets": "python3 scripts/create_assets.py"
+  },
+  "devDependencies": {
+    "prettier": "3.9.10"
+  }
+}

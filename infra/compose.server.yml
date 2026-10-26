@@ -1,0 +1,40 @@
+name: after-rain
+services:
+  api:
+    build:
+      context: ..
+      dockerfile: infra/Dockerfile.api
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8000:8000"
+    environment:
+      APP_CONFIG_FILE: /run/secrets/api-config.json
+      HF_ENDPOINT: ${HF_ENDPOINT:-https://huggingface.co}
+    volumes:
+      - ./runtime.json:/run/secrets/api-config.json:ro
+      - models:/models
+    deploy:
+      resources:
+        limits:
+          memory: 4G
+    security_opt:
+      - no-new-privileges:true
+  caddy:
+    profiles: [edge]
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      API_DOMAIN: ${API_DOMAIN:-api.example.com}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - api
+volumes:
+  models:
+  caddy_data:
+  caddy_config:
