@@ -8,13 +8,19 @@ from .controllers import http, realtime
 from .core.config import load_settings
 from .core.container import Services
 from .core.errors import BusinessError
+from .infrastructure.openrouter_catalog import OpenRouterCatalog
 from .infrastructure.providers import Providers
 from .repositories.session_repository import SessionRepository
 from .services.events import EventPublisher
 from .services.interaction_service import InteractionService
+from .services.model_service import ModelService
+from .services.scene_service import SceneService
 from .services.session_service import SessionService
 
 ERROR_STATUS = {
+    "generation_failed": 502,
+    "invalid_model": 422,
+    "catalog_unavailable": 503,
     "not_found": 404,
     "expired": 410,
     "busy": 429,
@@ -27,11 +33,20 @@ ERROR_STATUS = {
 }
 
 
-def create_app(settings=None, providers=None) -> FastAPI:
+def create_app(settings=None, providers=None, catalog_client=None) -> FastAPI:
     cfg = settings or load_settings()
     models = providers or Providers(cfg)
-    sessions = SessionService(cfg, SessionRepository(cfg))
-    services = Services(cfg, sessions, InteractionService(cfg, models, EventPublisher()), models)
+    catalog_adapter = catalog_client or OpenRouterCatalog(cfg)
+    catalog = ModelService(cfg, catalog_adapter)
+    sessions = SessionService(cfg, SessionRepository(cfg), catalog)
+    services = Services(
+        cfg,
+        sessions,
+        InteractionService(cfg, models, EventPublisher()),
+        models,
+        catalog,
+        SceneService(cfg, catalog, models),
+    )
 
     @asynccontextmanager
     async def lifespan(app):
@@ -41,6 +56,7 @@ def create_app(settings=None, providers=None) -> FastAPI:
         finally:
             await sessions.shutdown()
             await models.close()
+            await catalog_adapter.close()
 
     app = FastAPI(title="After Rain API", lifespan=lifespan)
     app.state.services = services

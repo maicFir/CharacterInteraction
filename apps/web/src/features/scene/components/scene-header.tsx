@@ -1,22 +1,40 @@
+import { ModelSelector } from './model-selector';
 import { Icon } from '@/components/ui/icon';
 import Link from 'next/link';
 import { IconButton } from '@/components/ui/icon-button';
 import { Toggle } from '@/components/ui/toggle';
 import { patchScene, useScene } from '../model/store';
 
-export function SceneHeader({ onOpenDetails }: { onOpenDetails: () => void }) {
+export function SceneHeader({
+  onOpenDetails,
+  onSelectModel,
+  onOpenSettings,
+}: {
+  onOpenDetails: () => void;
+  onOpenSettings: () => void;
+  onSelectModel: (model: string) => void;
+}) {
+  const definition = useScene((state) => state.definition);
   const mock = useScene((state) => state.mock);
   return (
     <header className="masthead">
-      <Link href="/" className="brand" aria-label="雨停之前 首页">
+      <Link href="/" className="brand" aria-label={`${definition.title} 首页`}>
         <span className="brand-symbol">
           <Icon name="rain" />
         </span>
         <span>
-          雨停之前<small>AFTER RAIN</small>
+          {definition.title}
+          <small>{definition.english_title}</small>
         </span>
       </Link>
       <div className="header-actions">
+        <IconButton
+          icon="settings"
+          label="场景设置"
+          className="info-button"
+          onClick={onOpenSettings}
+        />
+        <ModelSelector onSelect={onSelectModel} />
         <div className="mode-control">
           <span className="mode-label">MOCK</span>
           <Toggle

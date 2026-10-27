@@ -59,9 +59,28 @@ class InteractionService:
                         if not session.current(turn):
                             return
                         await publish(session, turn, "recognized", {"text": text})
-                    reply = await self.providers.reply(text or "", list(session.history))
+                    reply = await self.providers.reply(
+                        text or "",
+                        list(session.history),
+                        model_id=session.model_id,
+                        response_format=session.response_format,
+                        supported_parameters=session.supported_parameters,
+                        system_prompt=session.scene.conversation_prompt()
+                        if session.scene
+                        else None,
+                    )
                     if not session.current(turn):
                         return
+                    await publish(
+                        session,
+                        turn,
+                        "reaction",
+                        {
+                            "emotion": reply.emotion,
+                            "action": reply.action,
+                            "environment": reply.environment,
+                        },
+                    )
                     await publish(
                         session, turn, "state", {"phase": "thinking", "stage": "准备声音"}
                     )

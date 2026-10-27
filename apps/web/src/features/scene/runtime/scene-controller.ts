@@ -1,9 +1,19 @@
+import {
+  createVoiceCapture,
+  type VoiceCaptureFactory,
+  type VoiceCapturePort,
+} from './voice-capture';
 import type { SceneGateway, Session } from '../../../services/module/scene.types';
 import { initial, patchScene, useScene } from '../model/store';
 import { TurnGate, interpretMock, type Reply, type Ticket } from '../model/turns';
 
 export class SceneController {
-  constructor(private readonly gateway: SceneGateway) {}
+  constructor(
+    private readonly gateway: SceneGateway,
+    private readonly captureFactory: VoiceCaptureFactory = createVoiceCapture,
+  ) {}
+  private voiceCapture?: VoiceCapturePort;
+  private voiceTicket?: Ticket;
   private gate = new TurnGate();
   private current?: Ticket;
   private session?: Session;
@@ -25,6 +35,9 @@ export class SceneController {
     this.disconnect();
     patchScene({
       ...initial,
+      definition: useScene.getState().definition,
+      showCharacter: useScene.getState().showCharacter,
+      selectedModel: useScene.getState().selectedModel,
       entered: true,
       mock,
       muted: useScene.getState().muted,
@@ -37,7 +50,12 @@ export class SceneController {
       return;
     }
     try {
-      const session = await this.gateway.createSession();
+      const session = await this.gateway.createSession({
+        model_id: useScene.getState().selectedModel || undefined,
+        ...(useScene.getState().definition.id !== 'mira'
+          ? { scene: useScene.getState().definition }
+          : {}),
+      });
       if (!this.gate.isCurrent(ticket)) {
         void this.removeSession(session);
         return;
@@ -74,7 +92,16 @@ export class SceneController {
             return;
           this.seen.add(event.event_id);
           if (event.type === 'state') patchScene({ phase: 'thinking', stage: event.payload.stage });
-          if (event.type === 'recognized') patchScene({ userText: event.payload.text });
+          if (event.type === 'recognized')
+            patchScene({ userText: event.payload.text, emotion: 'curious' });
+          if (event.type === 'reaction') {
+            patchScene({
+              reactionReady: true,
+              emotion: event.payload.emotion,
+              action: event.payload.action,
+              environment: event.payload.environment,
+            });
+          }
           if (event.type === 'error') this.fail(event.payload.message);
           if (event.type === 'reply.ready') {
             this.clearWaiting();
@@ -87,6 +114,7 @@ export class SceneController {
       ws.onclose = () => {
         clearTimeout(timeout);
         if (this.socket === ws) {
+          this.stopVoiceConversation();
           this.stop();
           patchScene({
             connected: false,
@@ -111,6 +139,7 @@ export class SceneController {
     }
   }
   disconnect() {
+    this.stopVoiceConversation();
     this.stop();
     this.cancelRecording();
     this.gate.reset();
@@ -126,6 +155,8 @@ export class SceneController {
     this.seen.clear();
   }
   stop() {
+    this.voiceTicket = undefined;
+    patchScene({ reactionReady: false });
     const previous = this.current;
     this.current = this.gate.next();
     this.clearWaiting();
@@ -145,6 +176,7 @@ export class SceneController {
       this.objectUrl = undefined;
     }
     this.replay = undefined;
+    if (typeof window !== 'undefined') window.speechSynthesis?.cancel();
     if (previous) this.send({ type: 'interrupt', turn_id: previous.turn });
     patchScene({ phase: 'idle', action: 'none', subtitle: '', blocked: false, stage: '等你继续' });
   }
@@ -152,7 +184,13 @@ export class SceneController {
     this.stop();
     const ticket = this.current!;
     this.seen.clear();
-    patchScene({ error: '', phase: 'thinking', stage: '整理思绪' });
+    patchScene({
+      error: '',
+      phase: 'thinking',
+      emotion: 'curious',
+      action: 'none',
+      stage: '整理思绪',
+    });
     this.waitingTimer = setTimeout(() => {
       if (this.gate.isCurrent(ticket)) {
         this.stop();
@@ -162,6 +200,7 @@ export class SceneController {
     return ticket;
   }
   async submit(text: string) {
+    this.voiceTicket = undefined;
     const value = text.trim();
     if (!value || !useScene.getState().connected) return;
     this.cancelRecording();
@@ -176,7 +215,9 @@ export class SceneController {
         this.fail('模拟：语音服务暂时不可用。画面仍保留，可以重新发送。');
         return;
       }
-      await this.play(interpretMock(value), ticket);
+      if (useScene.getState().definition.id === 'mira')
+        await this.play(interpretMock(value), ticket);
+      else this.playPreset(value, ticket);
     } else {
       try {
         const session = this.session;
@@ -192,6 +233,39 @@ export class SceneController {
         if (this.gate.isCurrent(ticket)) this.fail(this.message(error));
       }
     }
+  }
+
+  private playPreset(input: string, ticket: Ticket) {
+    const scene = useScene.getState().definition;
+    const photo = /照片|明信片|风景|photo/i.test(input);
+    const directives = interpretMock(input);
+    const mood = photo ? 'curious' : /等|故事|消息|信|谁/.test(input) ? 'sad' : 'calm';
+    const text = scene.mock_replies[photo ? 2 : mood === 'sad' ? 1 : 0];
+    patchScene({
+      subtitle: text,
+      emotion: mood,
+      action: photo ? 'offer_photo' : directives.action,
+      environment: directives.environment,
+      phase: 'idle',
+      photo,
+      stage: 'Mock 场景预设回复',
+    });
+    const synth = typeof window !== 'undefined' ? window.speechSynthesis : undefined;
+    const voice = synth
+      ?.getVoices()
+      .find((item) => item.localService && item.lang.startsWith('zh'));
+    if (!synth || !voice) return;
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.voice = voice;
+    utterance.lang = voice.lang;
+    utterance.volume = useScene.getState().muted ? 0 : 1;
+    utterance.onstart = () => {
+      if (this.gate.isCurrent(ticket)) patchScene({ phase: 'speaking' });
+    };
+    utterance.onend = utterance.onerror = () => {
+      if (this.gate.isCurrent(ticket)) patchScene({ phase: 'idle' });
+    };
+    synth.speak(utterance);
   }
 
   private async play(reply: Reply, ticket: Ticket) {
@@ -212,7 +286,7 @@ export class SceneController {
         }
         patchScene({
           phase: 'speaking',
-          stage: 'Mira 正在说话',
+          stage: `${useScene.getState().definition.character.name} 正在说话`,
           subtitle: reply.text,
           emotion: reply.emotion,
           action: reply.action,
@@ -225,7 +299,13 @@ export class SceneController {
       audio.onended = () => {
         if (!this.gate.isCurrent(ticket)) return;
         this.send({ type: 'playback', turn_id: ticket.turn, status: 'ended' });
-        patchScene({ phase: 'idle', action: 'none', stage: '等你继续', blocked: false });
+        patchScene({
+          phase: 'idle',
+          action: 'none',
+          stage: useScene.getState().voiceEnabled ? '直接说话，我在听' : '等你继续',
+          voiceStatus: useScene.getState().voiceEnabled ? 'listening' : 'off',
+          blocked: false,
+        });
         if (this.objectUrl) URL.revokeObjectURL(this.objectUrl);
         this.objectUrl = undefined;
         this.audio = undefined;
@@ -272,13 +352,99 @@ export class SceneController {
     void this.submit('你好');
   }
 
+  async startVoiceConversation() {
+    const state = useScene.getState();
+    if (state.mock || !state.connected || this.voiceCapture) return;
+    this.cancelRecording();
+    this.stop();
+    patchScene({ voiceEnabled: true, voiceStatus: 'starting', error: '' });
+    const capture = this.captureFactory({
+      onStart: () => {
+        if (this.voiceCapture !== capture) return;
+        this.voiceTicket = this.begin();
+        this.clearWaiting();
+        patchScene({
+          phase: 'listening',
+          emotion: 'curious',
+          action: 'none',
+          recording: true,
+          userText: '',
+          stage: '正在听你说话',
+          voiceStatus: 'listening',
+        });
+      },
+      onEnd: (blob) => {
+        if (this.voiceCapture !== capture) return;
+        const ticket = this.voiceTicket;
+        this.voiceTicket = undefined;
+        patchScene({ recording: false });
+        if (!ticket || !this.gate.isCurrent(ticket)) return;
+        if (blob.size <= 44) {
+          patchScene({ phase: 'idle', stage: '继续说，我在听', voiceStatus: 'listening' });
+          return;
+        }
+        patchScene({ voiceStatus: 'processing' });
+        void this.uploadAudio(blob, ticket);
+      },
+      onLevel: (level) => {
+        if (this.voiceCapture === capture) patchScene({ voiceLevel: level });
+      },
+      onError: (message) => {
+        if (this.voiceCapture !== capture) return;
+        this.stopVoiceConversation();
+        this.stop();
+        this.fail(message);
+      },
+    });
+    this.voiceCapture = capture;
+    try {
+      await capture.start();
+      if (this.voiceCapture !== capture) {
+        capture.stop();
+        return;
+      }
+      patchScene({ voiceStatus: 'listening', stage: '直接说话，我在听' });
+    } catch (error) {
+      if (this.voiceCapture !== capture) return;
+      this.stopVoiceConversation();
+      this.fail(
+        error instanceof DOMException && error.name === 'NotAllowedError'
+          ? '麦克风未获授权，请允许后重新开启，或使用文字。'
+          : this.message(error),
+      );
+    }
+  }
+
+  stopVoiceConversation() {
+    const capture = this.voiceCapture;
+    this.voiceCapture = undefined;
+    this.voiceTicket = undefined;
+    capture?.stop();
+    patchScene({ voiceEnabled: false, voiceStatus: 'off', voiceLevel: 0, recording: false });
+  }
+
+  toggleVoiceConversation() {
+    if (this.voiceCapture) {
+      this.stopVoiceConversation();
+      this.stop();
+    } else void this.startVoiceConversation();
+  }
+
   async startRecording() {
+    if (useScene.getState().voiceEnabled) return;
     if (!useScene.getState().connected || this.recorder || useScene.getState().recording) return;
     const ticket = this.begin();
     this.clearWaiting();
     this.releaseRequested = false;
     this.recordingCancelled = false;
-    patchScene({ phase: 'listening', recording: true, stage: '正在听你说话', userText: '' });
+    patchScene({
+      phase: 'listening',
+      emotion: 'curious',
+      action: 'none',
+      recording: true,
+      stage: '正在听你说话',
+      userText: '',
+    });
     if (useScene.getState().mock) {
       this.recordingTimer = setTimeout(() => this.finishRecording(), 20000);
       return;
@@ -321,7 +487,11 @@ export class SceneController {
         }
         if (useScene.getState().mock) {
           patchScene({ stage: 'Mock 语音样例：窗外的雨停了吗？' });
-          void this.submit('窗外的雨停了吗？');
+          void this.submit(
+            useScene.getState().definition.id === 'mira'
+              ? '窗外的雨停了吗？'
+              : useScene.getState().definition.topics[0],
+          );
         } else void this.uploadAudio(blob, ticket);
       };
       recorder.onerror = () => {
@@ -346,7 +516,11 @@ export class SceneController {
     if (this.recordingTimer) clearTimeout(this.recordingTimer);
     if (useScene.getState().mock && useScene.getState().recording) {
       patchScene({ recording: false });
-      void this.submit('窗外的雨停了吗？');
+      void this.submit(
+        useScene.getState().definition.id === 'mira'
+          ? '窗外的雨停了吗？'
+          : useScene.getState().definition.topics[0],
+      );
       return;
     }
     if (this.recorder?.state === 'recording') this.recorder.stop();
@@ -375,7 +549,15 @@ export class SceneController {
     }, 100000);
     this.abort = new AbortController();
     const form = new FormData();
-    form.append('file', blob, blob.type.includes('mp4') ? 'speech.m4a' : 'speech.webm');
+    form.append(
+      'file',
+      blob,
+      blob.type.includes('wav')
+        ? 'speech.wav'
+        : blob.type.includes('mp4')
+          ? 'speech.m4a'
+          : 'speech.webm',
+    );
     form.append('turn_id', String(ticket.turn));
     try {
       await this.gateway.uploadAudio({ session: this.session, form, signal: this.abort.signal });
@@ -399,6 +581,7 @@ export class SceneController {
       action: 'none',
       recording: false,
       stage: '稍等一下',
+      voiceStatus: useScene.getState().voiceEnabled ? 'listening' : 'off',
     });
   }
   private message(error: unknown) {

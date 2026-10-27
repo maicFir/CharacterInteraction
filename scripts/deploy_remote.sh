@@ -19,6 +19,18 @@ compose=(docker compose --env-file infra/domain.env -f infra/compose.server.yml)
 if [[ "$(sed -n 's/^MANAGED_HTTPS=//p' infra/domain.env)" == true ]]; then
   compose+=(--profile edge)
 fi
+# Check only this project's listeners. Do not stop or recreate other projects.
+api_port="$(sed -n 's/^API_HOST_PORT=//p' infra/domain.env)"
+api_port="${api_port:-18473}"
+[[ "$api_port" =~ ^[0-9]+$ ]] && ((10#$api_port >= 1024 && 10#$api_port <= 65535)) || exit 1
+owned_api="$("${compose[@]}" ps -q api)"
+python3 scripts/check_deploy_ports.py --port "$api_port" --container "$owned_api"
+if [[ "$(sed -n 's/^MANAGED_HTTPS=//p' infra/domain.env)" == true ]]; then
+  owned_edge="$("${compose[@]}" ps -q caddy)"
+  python3 scripts/check_deploy_ports.py --port 80 --container "$owned_edge"
+  python3 scripts/check_deploy_ports.py --port 443 --container "$owned_edge"
+fi
+
 rollback() {
   echo 'Deployment failed. Attempting previous-release rollback.'
   if [[ -n "$previous" && -d "$previous" ]]; then
@@ -31,7 +43,7 @@ trap rollback ERR
 "${compose[@]}" up -d --wait --wait-timeout 120
 # Only local speech providers require model weights. Cached downloads are reused in the volume.
 "${compose[@]}" exec -T api .venv/bin/python prepare_models.py
-curl --fail --retry 5 --retry-delay 3 http://127.0.0.1:8000/api/health
+curl --fail --retry 5 --retry-delay 3 "http://127.0.0.1:$api_port/api/health"
 ln -sfn "$release" "$base/current"
 trap - ERR
 echo 'Backend release healthy. Previous releases retained for rollback.'

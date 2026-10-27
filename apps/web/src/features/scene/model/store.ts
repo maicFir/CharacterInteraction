@@ -1,6 +1,14 @@
 import { create } from 'zustand';
+import { defaultScene, type SceneDefinition } from './scene-definition';
 import type { Phase, Reply } from './turns';
 type SceneState = {
+  definition: SceneDefinition;
+  showCharacter: boolean;
+  voiceEnabled: boolean;
+  voiceStatus: 'off' | 'starting' | 'listening' | 'processing';
+  voiceLevel: number;
+  reactionReady: boolean;
+  selectedModel: string;
   mock: boolean;
   entered: boolean;
   connected: boolean;
@@ -19,6 +27,13 @@ type SceneState = {
   mediaFailed: boolean;
 };
 export const initial: SceneState = {
+  definition: defaultScene,
+  showCharacter: true,
+  voiceEnabled: false,
+  voiceStatus: 'off',
+  voiceLevel: 0,
+  reactionReady: false,
+  selectedModel: '',
   mock: true,
   entered: false,
   connected: false,

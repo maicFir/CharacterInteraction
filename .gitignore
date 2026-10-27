@@ -21,3 +21,5 @@ playwright-report/
 infra/runtime.json
 infra/domain.env
 /0912-candidate(1).pdf
+
+infra/nginx.generated.conf

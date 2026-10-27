@@ -2,6 +2,7 @@ import { phaseNames } from '../model/labels';
 import { useScene } from '../model/store';
 
 export function SubtitlePanel() {
+  const definition = useScene((state) => state.definition);
   const phase = useScene((state) => state.phase);
   const subtitle = useScene((state) => state.subtitle);
   const stage = useScene((state) => state.stage);
@@ -12,13 +13,15 @@ export function SubtitlePanel() {
       ? '我在听，说完后松开就好。'
       : phase === 'thinking'
         ? `${stage}…`
-        : '她抬起头，向你轻轻笑了一下。');
+        : definition.opening_line);
   return (
     <>
       <div className="character-label">
         <span className={`presence ${phase}`} />
-        <span>Mira</span>
-        <span className="role-description">旅行摄影师 · 26</span>
+        <span>{definition.character.name}</span>
+        <span className="role-description">
+          {definition.character.profession} · {definition.character.age}
+        </span>
         <span className="phase-badge" data-testid="phase">
           {phaseNames[phase]}
         </span>
@@ -36,7 +39,7 @@ export function SubtitlePanel() {
       {userText ? (
         <p className="your-words">你 · {userText}</p>
       ) : (
-        <p className="your-words placeholder">从一句问候，开始今晚的故事</p>
+        <p className="your-words placeholder">{definition.conversation_hint}</p>
       )}
     </>
   );

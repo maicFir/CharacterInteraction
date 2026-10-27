@@ -15,7 +15,7 @@ class Settings(BaseSettings):
     allowed_origins: str = "http://localhost:3000,http://127.0.0.1:3000"
     llm_provider: Literal["openrouter", "compatible", "ollama"] = "openrouter"
     openrouter_api_key: str = Field(default="", repr=False)
-    openrouter_model: str = ""
+    openrouter_model: str = "openrouter/free"
     openrouter_base_url: str = "https://openrouter.ai/api/v1"
     openrouter_structured: bool = False
     llm_base_url: str = ""
@@ -43,9 +43,17 @@ class Settings(BaseSettings):
         return [x.strip().rstrip("/") for x in self.allowed_origins.split(",") if x.strip()]
 
     @property
+    def default_model(self):
+        return (
+            (self.openrouter_model or "openrouter/free")
+            if self.llm_provider == "openrouter"
+            else self.llm_model
+        )
+
+    @property
     def llm_ready(self):
         if self.llm_provider == "openrouter":
-            return bool(self.openrouter_api_key and self.openrouter_model)
+            return bool(self.openrouter_api_key)
         return bool(self.llm_base_url and self.llm_model)
 
 

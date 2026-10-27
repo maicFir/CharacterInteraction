@@ -6,7 +6,7 @@ services:
       dockerfile: infra/Dockerfile.api
     restart: unless-stopped
     ports:
-      - "127.0.0.1:8000:8000"
+      - '127.0.0.1:${API_HOST_PORT:-18473}:8000'
     environment:
       APP_CONFIG_FILE: /run/secrets/api-config.json
       HF_ENDPOINT: ${HF_ENDPOINT:-https://huggingface.co}
@@ -24,8 +24,8 @@ services:
     image: caddy:2-alpine
     restart: unless-stopped
     ports:
-      - "80:80"
-      - "443:443"
+      - '80:80'
+      - '443:443'
     environment:
       API_DOMAIN: ${API_DOMAIN:-api.example.com}
     volumes:

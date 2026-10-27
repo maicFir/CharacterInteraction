@@ -2,6 +2,7 @@ import { Icon } from '@/components/ui/icon';
 import { patchScene, useScene } from '../model/store';
 
 export function EntryOverlay() {
+  const definition = useScene((state) => state.definition);
   const entered = useScene((state) => state.entered);
   const mock = useScene((state) => state.mock);
   if (entered) return null;
@@ -10,14 +11,10 @@ export function EntryOverlay() {
       <section className="entry-card">
         <div className="eyebrow">A MOMENT BETWEEN STRANGERS</div>
         <span className="entry-star">✦</span>
-        <h2>恰好，雨还没停。</h2>
-        <p>
-          在即将打烊的咖啡馆，
-          <br />
-          认识一位带着照片与心事的旅人。
-        </p>
+        <h2>{definition.entry_title}</h2>
+        <p>{definition.entry_description}</p>
         <button className="enter-button" onClick={() => patchScene({ entered: true })}>
-          坐下来，聊一会儿
+          {definition.enter_label}
           <Icon name="arrow" />
         </button>
         <small>

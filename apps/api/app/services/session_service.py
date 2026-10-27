@@ -8,17 +8,24 @@ from ..repositories.session_repository import SessionRepository
 
 
 class SessionService:
-    def __init__(self, settings: Settings, repository: SessionRepository):
+    def __init__(self, settings: Settings, repository: SessionRepository, models=None):
+        self.models = models
         self.settings = settings
         self.repository = repository
         self._cleaner: asyncio.Task | None = None
 
-    def create(self, client_id: str) -> Session:
+    async def create(self, client_id: str, model_id=None, scene=None) -> Session:
         if not self.settings.llm_ready:
             raise BusinessError(
                 "unconfigured", "请先配置后端 OpenRouter 密钥和模型 ID，或使用 Mock 模式。"
             )
-        return self.repository.create(client_id)
+        selection = await self.models.select(model_id)
+        session = self.repository.create(client_id)
+        session.scene = scene
+        session.model_id = selection.model_id
+        session.response_format = selection.response_format
+        session.supported_parameters = selection.supported_parameters
+        return session
 
     def authenticate(self, session_id: str, token: str) -> Session:
         return self.repository.authenticate(session_id, token)

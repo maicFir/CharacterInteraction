@@ -5,12 +5,19 @@ import os
 import re
 from pathlib import Path
 
-required = ["OPENROUTER_API_KEY", "OPENROUTER_MODEL", "ALLOWED_ORIGINS"]
+# Validate the host port before creating any secret-bearing output.
+port = os.environ.get("API_HOST_PORT") or "18473"
+if not re.fullmatch(r"[0-9]+", port) or not 1024 <= int(port) <= 65535:
+    raise SystemExit("API_HOST_PORT must be an integer between 1024 and 65535")
+port = str(int(port))
+
+required = ["OPENROUTER_API_KEY", "ALLOWED_ORIGINS"]
 for name in required:
     if not os.environ.get(name, "").strip():
         raise SystemExit(f"Missing required secret/variable: {name}")
 defaults = {
     "LLM_PROVIDER": "openrouter",
+    "OPENROUTER_MODEL": "openrouter/free",
     "STT_PROVIDER": "local",
     "TTS_PROVIDER": "local",
     "PIPER_MODEL": "/models/piper/zh_CN-huayan-medium.onnx",
@@ -19,6 +26,7 @@ defaults = {
     "TURN_TIMEOUT": "90",
 }
 keys = required + [
+    "OPENROUTER_MODEL",
     "OPENROUTER_STRUCTURED",
     "STT_PROVIDER",
     "STT_BASE_URL",
@@ -47,5 +55,11 @@ if managed not in ("true", "false"):
 if managed == "true" and domain == "api.example.com":
     raise SystemExit("Set your real API_DOMAIN before enabling managed HTTPS")
 Path("infra/domain.env").write_text(
-    f"API_DOMAIN={domain}\nHF_ENDPOINT={endpoint}\nMANAGED_HTTPS={managed}\n"
+    f"API_DOMAIN={domain}\nHF_ENDPOINT={endpoint}\nMANAGED_HTTPS={managed}\nAPI_HOST_PORT={port}\n"
+)
+
+# Review and install this dedicated server block in the existing Nginx separately.
+proxy = Path("infra/nginx.example.conf").read_text()
+Path("infra/nginx.generated.conf").write_text(
+    proxy.replace("127.0.0.1:18473", f"127.0.0.1:{port}").replace("api.example.com", domain)
 )

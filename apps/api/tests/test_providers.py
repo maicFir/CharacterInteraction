@@ -60,3 +60,63 @@ async def test_bad_model_json_is_a_recoverable_failure_not_an_unchecked_command(
             await provider.reply("你好", [])
     finally:
         await provider.close()
+
+
+@pytest.mark.asyncio
+async def test_selected_model_is_forwarded_with_its_supported_json_mode():
+    def handler(request):
+        import json
+
+        body = json.loads(request.content)
+        assert body["model"] == "selected/model"
+        assert body["response_format"] == {"type": "json_object"}
+        assert "temperature" not in body
+        return httpx.Response(
+            200, json={"choices": [{"message": {"content": '{"text":"你好。"}'}}]}
+        )
+
+    provider = Providers(Settings(_env_file=None, openrouter_api_key="test-key"))
+    await provider.client.aclose()
+    provider.client = httpx.AsyncClient(transport=httpx.MockTransport(handler))
+    try:
+        reply = await provider.reply(
+            "你好",
+            [],
+            model_id="selected/model",
+            response_format="json_object",
+            supported_parameters=["response_format"],
+        )
+        assert reply.text == "你好。"
+    finally:
+        await provider.close()
+
+
+@pytest.mark.asyncio
+async def test_custom_scene_prompt_replaces_default_mira_identity():
+    import json
+    from pathlib import Path
+
+    from app.models.scene_definition import SceneDefinition
+
+    scene = SceneDefinition.model_validate(
+        json.loads(
+            (Path(__file__).resolve().parents[3] / "packages/contracts/scenes.json").read_text()
+        )[1]
+    )
+
+    def handler(request):
+        body = json.loads(request.content)
+        assert body["messages"][0]["content"] == scene.conversation_prompt()
+        assert "林舟" in body["messages"][0]["content"]
+        return httpx.Response(
+            200, json={"choices": [{"message": {"content": '{"text":"你好，我是林舟。"}'}}]}
+        )
+
+    provider = Providers(Settings(_env_file=None, openrouter_api_key="test-key"))
+    await provider.client.aclose()
+    provider.client = httpx.AsyncClient(transport=httpx.MockTransport(handler))
+    try:
+        reply = await provider.reply("你是谁", [], system_prompt=scene.conversation_prompt())
+        assert "林舟" in reply.text
+    finally:
+        await provider.close()

@@ -1,3 +1,5 @@
+import { resolveBackendUrl } from './backend-url';
+
 export const API_BASE = (process.env.NEXT_PUBLIC_API_URL || '').replace(/\/$/, '');
 
 export class ApiError extends Error {
@@ -18,13 +20,22 @@ export function backendUrl(path: string) {
       0,
       'unconfigured',
     );
-  return API_BASE + path;
+  return resolveBackendUrl(
+    path,
+    API_BASE,
+    typeof window === 'undefined' ? undefined : window.location.origin,
+  );
 }
 
-async function response(path: string, options: RequestInit = {}, local = false): Promise<Response> {
+async function response(
+  path: string,
+  options: RequestInit = {},
+  local = false,
+  timeoutMs = 15000,
+): Promise<Response> {
   const signal = options.signal
-    ? AbortSignal.any([options.signal, AbortSignal.timeout(15000)])
-    : AbortSignal.timeout(15000);
+    ? AbortSignal.any([options.signal, AbortSignal.timeout(timeoutMs)])
+    : AbortSignal.timeout(timeoutMs);
   let result: Response;
   try {
     result = await fetch(local ? path : backendUrl(path), { ...options, signal });
@@ -51,8 +62,8 @@ async function response(path: string, options: RequestInit = {}, local = false):
 }
 
 export const httpClient = {
-  async json<T>(path: string, options?: RequestInit): Promise<T> {
-    return (await response(path, options)).json();
+  async json<T>(path: string, options?: RequestInit, timeoutMs = 15000): Promise<T> {
+    return (await response(path, options, false, timeoutMs)).json();
   },
   async blob(path: string, options?: RequestInit, local = false): Promise<Blob> {
     return (await response(path, options, local)).blob();

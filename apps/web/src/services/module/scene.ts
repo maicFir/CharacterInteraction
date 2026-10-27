@@ -1,4 +1,5 @@
 'use client';
+import type { SceneDefinition } from '../../../../../packages/contracts/scene';
 import { useMemo } from 'react';
 import { ApiPath } from '../api/path';
 import { API_BASE } from '../http-client';
@@ -6,18 +7,31 @@ import { useFetch, useMutation } from '../hooks';
 import { sceneApi } from './scene.transport';
 import type {
   AcceptedTurn,
+  CreateSessionRequest,
   AudioRequest,
   BackendHealth,
+  ModelCatalog,
   LoadAudioRequest,
   SceneGateway,
   Session,
   TextRequest,
 } from './scene.types';
 
+export const useGenerateSceneApi = () =>
+  useMutation<{ prompt: string; model_id?: string; signal: AbortSignal }, SceneDefinition>(
+    'scene/generate',
+    sceneApi.generateScene,
+  );
+
 export const useBackendHealthApi = (enabled: boolean) =>
   useFetch<BackendHealth>(enabled && API_BASE ? ApiPath.health : null);
+export const useOpenRouterModelsApi = (enabled: boolean) =>
+  useFetch<ModelCatalog>(enabled && API_BASE ? ApiPath.models : null);
 export const useCreateSessionApi = () =>
-  useMutation<void, Session>('scene/create-session', sceneApi.createSession);
+  useMutation<CreateSessionRequest | undefined, Session>(
+    'scene/create-session',
+    sceneApi.createSession,
+  );
 export const useCloseSessionApi = () =>
   useMutation<Session, { closed: boolean }>('scene/close-session', sceneApi.closeSession);
 export const useSendTextApi = () =>
@@ -35,7 +49,7 @@ export function useSceneGatewayApi(): SceneGateway {
   const { trigger: load } = useLoadAudioApi();
   return useMemo(
     () => ({
-      createSession: () => create(),
+      createSession: (input) => create(input),
       closeSession: close,
       sendText: text,
       uploadAudio: audio,

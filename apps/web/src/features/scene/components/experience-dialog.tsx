@@ -12,6 +12,7 @@ export function ExperienceDialog({
   onClose: () => void;
   controller: SceneController;
 }) {
+  const definition = useScene((state) => state.definition);
   const mock = useScene((state) => state.mock);
   const entered = useScene((state) => state.entered);
   const { data: health } = useBackendHealthApi(!mock);
@@ -21,19 +22,19 @@ export function ExperienceDialog({
       <div className="eyebrow">ABOUT THE EXPERIENCE</div>
       <h2 id="details-title">一段可以被打断的相遇</h2>
       <p>
-        Mira
-        是原创成年角色。你可以用文字或按住麦克风与她交流；说话时按下麦克风，会立即停止她的回复。
+        {definition.character.name}{' '}
+        是原创成年角色。你可以用文字或按住麦克风交流；再次按下麦克风会立即打断回复。
       </p>
       <dl>
         <dt>Mock 模式</dt>
         <dd>
-          使用本地预设文本、录制语音与序列帧，不调用后端。Mock
-          按钮模拟倾听和打断，不访问麦克风；松开后使用预设问题「窗外的雨停了吗？」，不识别真实语音。
+          使用本地预设文本与插画，不调用后端。默认场景带录制语音；其他场景使用设备本地中文语音，无可用语音时仅显示字幕。Mock
+          按钮模拟倾听和打断，不访问麦克风；松开后使用当前场景的预设问题，不识别真实语音。
         </dd>
         <dt>真实模式</dt>
         <dd>
           连接后端 STT → OpenRouter LLM →
-          TTS；字幕与语音同步开始。原始录音处理后删除，临时会话会过期。
+          TTS。可开启连续语音：麦克风持续本地检测，停顿后自动提交；角色说话或思考时直接开口即可打断。也可按住录音。字幕与语音同步开始；离开页面会结束麦克风监听，录音处理后删除。
         </dd>
         <dt>当前后端</dt>
         <dd>

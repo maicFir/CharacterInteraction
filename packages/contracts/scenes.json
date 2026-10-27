@@ -1,0 +1,140 @@
+[
+  {
+    "id": "mira",
+    "title": "雨停之前",
+    "english_title": "AFTER RAIN",
+    "chapter": "CHAPTER 01 · THE ENCOUNTER",
+    "headline": ["雨停之前，", "再坐一会儿。"],
+    "intro": ["城市在窗外慢了下来。", "而她的故事，似乎才刚刚开始。"],
+    "tagline": "一场雨 · 一杯咖啡 · 一次偶遇",
+    "location": "街角咖啡馆",
+    "time": "23:17",
+    "weather": "雨夜",
+    "entry_title": "恰好，雨还没停。",
+    "entry_description": "在即将打烊的咖啡馆，认识一位带着照片与心事的旅人。",
+    "enter_label": "坐下来，聊一会儿",
+    "opening_line": "她抬起头，向你轻轻笑了一下。",
+    "conversation_hint": "从一句问候，开始今晚的故事",
+    "character": {
+      "name": "Mira",
+      "age": 26,
+      "profession": "旅行摄影师",
+      "appearance": "琥珀色雨衣，银色星星发夹。",
+      "personality": "温柔、克制，有一点心事。",
+      "backstory": "暴雨后的夜晚，在即将打烊的咖啡馆等待一位很久没见的朋友，不愿直接说出原因。"
+    },
+    "topics": ["你好，可以坐这里吗？", "你在等谁？", "能看看你的照片吗？"],
+    "photo_caption": "留在记忆里的风景",
+    "photo_description": "Mira珍藏的海边风景照片",
+    "palette": {
+      "background": "#10251f",
+      "accent": "#dec77c",
+      "outfit": "#b38e46",
+      "hair": "#37322c",
+      "skin": "#e5c5a3"
+    },
+    "visual": {
+      "setting": "cafe",
+      "hairstyle": "long",
+      "outfit": "coat",
+      "accessory": "star"
+    },
+    "mock_replies": [
+      "你好，我叫Mira。城市在窗外慢了下来。你愿意在这里坐一会儿吗？",
+      "暴雨后的夜晚，在即将打烊的咖啡馆等待一位很久没见的朋友，不愿直接说出原因。你有过类似的经历吗？",
+      "这是我一直珍藏的海边照片。每次看到它，都会想起当时的心情。"
+    ]
+  },
+  {
+    "id": "bookshop",
+    "title": "书页之间",
+    "english_title": "BETWEEN PAGES",
+    "chapter": "CHAPTER 01 · THE ENCOUNTER",
+    "headline": ["末班车之前，", "翻开一页旧时光。"],
+    "intro": ["街角书店亮着最后一盏灯。", "一个关于失物的故事，正等人读完。"],
+    "tagline": "一段故事 · 一次相遇 · 由你开启",
+    "location": "栖木旧书店",
+    "time": "18:40",
+    "weather": "秋日黄昏",
+    "entry_title": "末班车之前，",
+    "entry_description": "走进黄昏里的旧书店，和一位收藏故事的店主交换一段回忆。",
+    "enter_label": "走近，聊一会儿",
+    "opening_line": "林舟合上手里的旧书，替你拉开一把椅子。",
+    "conversation_hint": "从一句问候，开始这段故事",
+    "character": {
+      "name": "林舟",
+      "age": 29,
+      "profession": "旧书店店主",
+      "appearance": "深绿色针织衫，短发，圆框眼镜。",
+      "personality": "安静、耐心，偶尔会讲一个冷笑话。",
+      "backstory": "正在为一本夹着匿名明信片的旧书寻找主人，想知道信里那座海边小城的故事。"
+    },
+    "topics": ["这家书店开了多久？", "那张明信片写了什么？", "你最喜欢哪本书？"],
+    "photo_caption": "留在记忆里的风景",
+    "photo_description": "林舟珍藏的海边风景照片",
+    "palette": {
+      "background": "#2b241e",
+      "accent": "#d6b28a",
+      "outfit": "#3e6757",
+      "hair": "#312a26",
+      "skin": "#dfb48f"
+    },
+    "visual": {
+      "setting": "bookshop",
+      "hairstyle": "short",
+      "outfit": "sweater",
+      "accessory": "glasses"
+    },
+    "mock_replies": [
+      "你好，我叫林舟。街角书店亮着最后一盏灯。你愿意在这里坐一会儿吗？",
+      "正在为一本夹着匿名明信片的旧书寻找主人，想知道信里那座海边小城的故事。你有过类似的经历吗？",
+      "这是我一直珍藏的海边照片。每次看到它，都会想起当时的心情。"
+    ]
+  },
+  {
+    "id": "station",
+    "title": "下一站微光",
+    "english_title": "NEXT STOP",
+    "chapter": "CHAPTER 01 · THE ENCOUNTER",
+    "headline": ["下一班列车，", "也许通往新的开始。"],
+    "intro": ["远处的铁轨映着暮色。", "有人把告别，写成了重逢的约定。"],
+    "tagline": "一段故事 · 一次相遇 · 由你开启",
+    "location": "海岸线小站",
+    "time": "18:40",
+    "weather": "暮色微风",
+    "entry_title": "下一班列车，",
+    "entry_description": "在海岸线的小站，和即将启程的乘务员聊聊远方与归途。",
+    "enter_label": "走近，聊一会儿",
+    "opening_line": "夏澄收好时刻表，朝你点了点头。",
+    "conversation_hint": "从一句问候，开始这段故事",
+    "character": {
+      "name": "夏澄",
+      "age": 24,
+      "profession": "列车乘务员",
+      "appearance": "深蓝色制服外套，盘发，浅色围巾。",
+      "personality": "开朗、细心，说起远方时会流露一点留恋。",
+      "backstory": "结束今天最后一班值乘，在站台等待一封迟到的来信，信里藏着重新出发的勇气。"
+    },
+    "topics": ["下一班车去哪里？", "你在等什么消息？", "沿途最美的风景是什么？"],
+    "photo_caption": "留在记忆里的风景",
+    "photo_description": "夏澄珍藏的海边风景照片",
+    "palette": {
+      "background": "#182b3b",
+      "accent": "#b7cbd7",
+      "outfit": "#3b5672",
+      "hair": "#362c29",
+      "skin": "#ebc5a6"
+    },
+    "visual": {
+      "setting": "station",
+      "hairstyle": "bun",
+      "outfit": "jacket",
+      "accessory": "scarf"
+    },
+    "mock_replies": [
+      "你好，我叫夏澄。远处的铁轨映着暮色。你愿意在这里坐一会儿吗？",
+      "结束今天最后一班值乘，在站台等待一封迟到的来信，信里藏着重新出发的勇气。你有过类似的经历吗？",
+      "这是我一直珍藏的海边照片。每次看到它，都会想起当时的心情。"
+    ]
+  }
+]

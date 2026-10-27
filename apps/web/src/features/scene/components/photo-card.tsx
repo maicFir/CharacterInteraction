@@ -3,6 +3,7 @@ import Image from 'next/image';
 import { patchScene, useScene } from '../model/store';
 
 export function PhotoCard() {
+  const definition = useScene((state) => state.definition);
   const visible = useScene((state) => state.photo);
   if (!visible) return null;
   return (
@@ -18,10 +19,11 @@ export function PhotoCard() {
         width={600}
         height={450}
         unoptimized
-        alt="Mira在雨后拍摄的海边：灯塔、海浪与天空"
+        alt={definition.photo_description}
       />
       <div>
-        雨后，海边。<span>OCT. 17 · MIRA</span>
+        {definition.photo_caption}
+        <span>{definition.character.name}</span>
       </div>
     </aside>
   );

@@ -1,16 +1,18 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, File, Form, Header, Request, UploadFile
+from fastapi import APIRouter, Body, Depends, File, Form, Header, Request, UploadFile
 from fastapi.responses import Response
 
 from ..core.container import Services
-from ..models.requests import TextInput
+from ..models.requests import GenerateSceneInput, SessionInput, TextInput
 from ..models.responses import (
     AcceptedTurnResponse,
     ClosedSessionResponse,
     HealthResponse,
+    ModelCatalogResponse,
     SessionResponse,
 )
+from ..models.scene_definition import SceneDefinition
 from .dependencies import get_services
 
 router = APIRouter(prefix="/api")
@@ -32,9 +34,29 @@ async def health(services: ServiceDependency):
 
 
 @router.post("/sessions", status_code=201, response_model=SessionResponse)
-async def create_session(request: Request, services: ServiceDependency):
-    session = services.sessions.create(request.client.host if request.client else "unknown")
-    return {"id": session.id, "token": session.token, "epoch": session.epoch}
+async def create_session(
+    request: Request, services: ServiceDependency, body: SessionInput | None = Body(default=None)
+):
+    session = await services.sessions.create(
+        request.client.host if request.client else "unknown",
+        body.model_id if body else None,
+        body.scene if body else None,
+    )
+    return {
+        "id": session.id,
+        "token": session.token,
+        "epoch": session.epoch,
+        "model_id": session.model_id,
+    }
+
+
+@router.get("/models/openrouter", response_model=ModelCatalogResponse)
+async def list_models(services: ServiceDependency):
+    return {
+        "data": await services.catalog.list_models(),
+        "default_model": services.settings.default_model,
+        "selection_enabled": services.settings.llm_provider == "openrouter",
+    }
 
 
 @router.delete("/sessions/{session_id}", response_model=ClosedSessionResponse)
@@ -78,4 +100,11 @@ async def get_audio(session_id: str, audio_id: str, services: ServiceDependency,
         services.sessions.audio(session, audio_id),
         media_type="audio/wav",
         headers={"Cache-Control": "no-store"},
+    )
+
+
+@router.post("/scenes/generate", response_model=SceneDefinition)
+async def generate_scene(request: Request, body: GenerateSceneInput, services: ServiceDependency):
+    return await services.scenes.generate(
+        request.client.host if request.client else "unknown", body.prompt, body.model_id
     )

@@ -1,7 +1,9 @@
+import type { SceneDefinition } from '../../../../../packages/contracts/scene';
 import { ApiPath } from '../api/path';
 import { backendUrl, httpClient } from '../http-client';
 import type {
   AcceptedTurn,
+  CreateSessionRequest,
   AudioRequest,
   LoadAudioRequest,
   Session,
@@ -11,7 +13,31 @@ import type {
 const headers = (session: Session) => ({ 'X-Session-Token': session.token });
 
 export const sceneApi = {
-  createSession: () => httpClient.json<Session>(ApiPath.sessions, { method: 'POST' }),
+  generateScene: ({
+    prompt,
+    model_id,
+    signal,
+  }: {
+    prompt: string;
+    model_id?: string;
+    signal: AbortSignal;
+  }) =>
+    httpClient.json<SceneDefinition>(
+      ApiPath.generateScene,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt, model_id }),
+        signal,
+      },
+      100000,
+    ),
+  createSession: (input?: CreateSessionRequest) =>
+    httpClient.json<Session>(ApiPath.sessions, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(input || {}),
+    }),
   closeSession: (session: Session) =>
     httpClient.json<{ closed: boolean }>(ApiPath.session(session.id), {
       method: 'DELETE',

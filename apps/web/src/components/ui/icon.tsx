@@ -14,9 +14,16 @@ export function Icon({
     | 'refresh'
     | 'photo'
     | 'stop'
-    | 'info';
+    | 'info'
+    | 'settings';
 }) {
   const paths = {
+    settings: (
+      <>
+        <path d="m9 3 1-1h4l1 3 3 1 3 1v4l-2 2v3l-1 3h-4l-2-2H9l-3 1-2-3 1-3-2-3 2-3 3 1Z" />
+        <circle cx="12" cy="11" r="3" />
+      </>
+    ),
     mic: (
       <>
         <rect x="9" y="2" width="6" height="12" rx="3" />

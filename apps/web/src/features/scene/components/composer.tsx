@@ -9,8 +9,10 @@ type Props = {
 };
 
 export function Composer({ input, onInput, onSend, controller }: Props) {
+  const name = useScene((state) => state.definition.character.name);
   const connected = useScene((state) => state.connected);
   const recording = useScene((state) => state.recording);
+  const voiceEnabled = useScene((state) => state.voiceEnabled);
   const mock = useScene((state) => state.mock);
   return (
     <form
@@ -26,8 +28,8 @@ export function Composer({ input, onInput, onSend, controller }: Props) {
         </span>
         <input
           className="outline-none focus-visible:outline-0"
-          aria-label="想对 Mira 说的话"
-          placeholder="想对 Mira 说些什么…"
+          aria-label={`想对 ${name} 说的话`}
+          placeholder={`想对 ${name} 说些什么…`}
           maxLength={1000}
           value={input}
           onChange={(event) => onInput(event.target.value)}
@@ -48,8 +50,8 @@ export function Composer({ input, onInput, onSend, controller }: Props) {
       <button
         type="button"
         className={`mic-button ${recording ? 'recording' : ''}`}
-        aria-label="按住说话，打断 Mira"
-        disabled={!connected}
+        aria-label={`按住说话，打断 ${name}`}
+        disabled={!connected || voiceEnabled}
         onPointerDown={(event) => {
           if (event.button !== 0) return;
           event.preventDefault();
@@ -75,7 +77,9 @@ export function Composer({ input, onInput, onSend, controller }: Props) {
         }}
       >
         <Icon name="mic" />
-        <span>{recording ? '松开发送' : mock ? '按住演示' : '按住说话'}</span>
+        <span>
+          {voiceEnabled ? '自动聆听' : recording ? '松开发送' : mock ? '按住演示' : '按住说话'}
+        </span>
       </button>
     </form>
   );

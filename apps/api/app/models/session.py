@@ -4,14 +4,22 @@ import time
 from dataclasses import dataclass, field
 from typing import Any
 
+from .scene_definition import SceneDefinition
+
+
 class StaleTurn(ValueError):
     pass
+
 
 @dataclass
 class Session:
     id: str = field(default_factory=lambda: secrets.token_urlsafe(24))
     token: str = field(default_factory=lambda: secrets.token_urlsafe(32))
     epoch: str = field(default_factory=lambda: secrets.token_hex(12))
+    scene: SceneDefinition | None = None
+    model_id: str = ""
+    response_format: str | None = None
+    supported_parameters: list[str] | None = None
     turn: int = 0
     invalid_through: int = 0
     touched: float = field(default_factory=time.monotonic)
@@ -25,7 +33,7 @@ class Session:
 
     def begin(self, turn: int):
         if turn <= max(self.turn, self.invalid_through):
-            raise StaleTurn('该轮次已经失效')
+            raise StaleTurn("该轮次已经失效")
         self._flush_partial()
         if self.task and not self.task.done():
             self.task.cancel()
@@ -52,21 +60,23 @@ class Session:
     def commit(self, turn: int, user: str, assistant: str) -> bool:
         if not self.current(turn):
             return False
-        self.history.extend([{'role': 'user', 'content': user}, {'role': 'assistant', 'content': assistant}])
+        self.history.extend(
+            [{"role": "user", "content": user}, {"role": "assistant", "content": assistant}]
+        )
         self.history = self.history[-16:]
         return True
 
     def _flush_partial(self):
         if self.pending and self.started:
             turn, user, reply = self.pending
-            self.commit(turn, user, '[此回复已开始播放但被打断，用户未必听完] ' + reply)
+            self.commit(turn, user, "[此回复已开始播放但被打断，用户未必听完] " + reply)
 
     def acknowledge(self, turn: int, status: str):
         if not self.current(turn) or not self.pending:
             return
-        if status == 'started':
+        if status == "started":
             self.started = True
-        elif status == 'ended':
+        elif status == "ended":
             _, user, reply = self.pending
             self.commit(turn, user, reply)
             self.pending = None

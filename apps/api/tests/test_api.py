@@ -9,7 +9,7 @@ class FakeProviders:
     async def close(self):
         pass
 
-    async def reply(self, text, history):
+    async def reply(self, text, history, **kwargs):
         return Reply(text="你好，今晚的雨很温柔。")
 
     async def synthesize(self, text):
@@ -57,7 +57,10 @@ def test_session_auth_websocket_reply_audio_and_playback_ack():
                 json={"turn_id": 1, "text": "你好"},
             )
             assert result.status_code == 202
-            events = [socket.receive_json() for _ in range(3)]
+            events = [socket.receive_json() for _ in range(4)]
+            assert events[1]["type"] == "reaction"
+            assert events[1]["payload"]["emotion"] == "calm"
+            assert events[2]["payload"]["stage"] == "准备声音"
             reply = events[-1]
             assert reply["type"] == "reply.ready"
             assert reply["epoch"] == s["epoch"]

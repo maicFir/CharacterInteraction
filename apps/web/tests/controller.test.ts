@@ -76,3 +76,107 @@ test('Mock hold-to-talk works without accessing microphone hardware', async () =
     controller.disconnect();
   }
 });
+
+test('selected model survives scene reset and is sent when creating a real session', async () => {
+  let requested: unknown;
+  const controller = new SceneController({
+    ...sceneApi,
+    createSession: async (input) => {
+      requested = input;
+      throw new Error('test connection intentionally stopped');
+    },
+  });
+  Object.assign(globalThis, { WebSocket: { OPEN: 1 } });
+  patchScene({ ...initial, selectedModel: 'vendor/chosen' });
+  try {
+    await controller.activate(false);
+    assert.deepEqual(requested, { model_id: 'vendor/chosen' });
+    assert.equal(useScene.getState().selectedModel, 'vendor/chosen');
+  } finally {
+    controller.disconnect();
+  }
+});
+
+test('custom scene survives activation and is bound to the backend session', async () => {
+  const { scenePresets } = await import('../src/features/scene/model/scene-definition');
+  let requested: unknown;
+  const controller = new SceneController({
+    ...sceneApi,
+    createSession: async (input) => {
+      requested = input;
+      throw new Error('intentional stop');
+    },
+  });
+  patchScene({ ...initial, definition: scenePresets[1] });
+  try {
+    await controller.activate(false);
+    assert.equal(useScene.getState().definition.character.name, scenePresets[1].character.name);
+    assert.deepEqual((requested as { scene: unknown }).scene, scenePresets[1]);
+  } finally {
+    controller.disconnect();
+  }
+});
+
+test('character visibility preference survives mode and scene activation', async () => {
+  assert.equal(initial.showCharacter, true);
+  const controller = new SceneController(sceneApi);
+  patchScene({ ...initial, showCharacter: false });
+  try {
+    await controller.activate(true);
+    assert.equal(useScene.getState().showCharacter, false);
+  } finally {
+    controller.disconnect();
+  }
+});
+
+test('hands-free speech immediately cancels the previous request and auto submits a new audio turn', async () => {
+  let callbacks:
+    import('../src/features/scene/runtime/voice-capture').VoiceCaptureCallbacks | undefined;
+  let oldSignal: AbortSignal | undefined;
+  let upload: import('../src/services/module/scene.types').AudioRequest | undefined;
+  const ws = {
+    readyState: 1,
+    send() {},
+    close() {},
+    onmessage: null as null | ((event: { data: string }) => void),
+  };
+  const controller = new SceneController(
+    {
+      ...sceneApi,
+      createSession: async () => ({ id: 'test', token: 'token', epoch: 'epoch' }),
+      openSocket: () => ws as unknown as WebSocket,
+      sendText: async (request) => {
+        oldSignal = request.signal;
+        return { accepted: true, turn_id: request.turnId };
+      },
+      uploadAudio: async (request) => {
+        upload = request;
+        return { accepted: true, turn_id: Number(request.form.get('turn_id')) };
+      },
+      closeSession: async () => {},
+    },
+    (value) => {
+      callbacks = value;
+      return { start: async () => {}, stop() {} };
+    },
+  );
+  Object.assign(globalThis, { WebSocket: { OPEN: 1 } });
+  patchScene({ ...initial });
+  try {
+    await controller.activate(false);
+    ws.onmessage?.({ data: JSON.stringify({ type: 'ready', epoch: 'epoch' }) });
+    await controller.submit('上一句还在处理');
+    await controller.startVoiceConversation();
+    callbacks!.onStart();
+    assert.equal(oldSignal?.aborted, true);
+    assert.equal(useScene.getState().phase, 'listening');
+    callbacks!.onEnd(new Blob([new Uint8Array(128)], { type: 'audio/wav' }));
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    assert.ok(upload);
+    assert.equal(upload.form.get('file') instanceof Blob, true);
+    controller.stopVoiceConversation();
+    assert.equal(useScene.getState().voiceEnabled, false);
+  } finally {
+    controller.disconnect();
+  }
+});

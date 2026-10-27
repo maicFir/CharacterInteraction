@@ -1,5 +1,7 @@
 # 雨停之前 · After Rain
 
+对照 72 小时题目的功能进度、评分依据与本次角色动作补齐，见 [题目完成度评估](docs/题目完成度评估.md)。
+
 移动网页优先的单角色互动短场景。Mira 是 26 岁的原创成年旅行摄影师；雨夜的街角咖啡馆里，你可以用文字或语音与她交流，并在她说话时按住麦克风打断。
 
 前端：Next.js 16 + TypeScript + SWR + Zustand + Tailwind CSS 4。后端：Python 3.12 + FastAPI。单仓库 monorepo，前端部署 Vercel，后端通过 GitHub Actions + SSH 部署自有服务器。
@@ -13,7 +15,7 @@ corepack pnpm install --frozen-lockfile
 corepack pnpm dev
 ```
 
-打开终端打印的地址（默认 `http://localhost:3000`，端口占用时 Next.js 会选择其他端口）。进入场景后，顶部 **Mock 开关默认开启**。
+打开终端打印的地址（默认 `http://localhost:3002`）。进入场景后，顶部 **Mock 开关默认开启**。
 
 - Mock 的文字输入按当前内容选择预设回应；照片、雨窗、等待朋友等话题分别触发不同表情和演出。
 - **按住演示**模拟倾听，立即停止旧语音；松开后使用预设问题“窗外的雨停了吗？”。Mock 不申请麦克风权限、不识别真实语音、不上传数据。
@@ -38,7 +40,7 @@ uv sync --frozen --extra local --python 3.12
 cp .env.development.example .env.development
 ```
 
-在 `apps/api/.env.development` 填入自己的 `OPENROUTER_API_KEY` 与 `OPENROUTER_MODEL`；模型 ID 由部署者决定。默认非流式调用 OpenRouter，JSON 提示词 + Pydantic 校验；若选择支持严格 JSON Schema 的模型，可启用 `OPENROUTER_STRUCTURED=true`。
+在 `apps/api/.env.development` 填入自己的 `OPENROUTER_API_KEY`，`OPENROUTER_MODEL=openrouter/free` 为默认免费路由，也可填写官方目录中具体文本模型 ID。关闭 Mock 后点击顶部“模型”，可搜索官方目录，默认只显示免费模型。切换模型会中断当前回复并创建新会话，清空当前对话。模型只作用于文本 LLM，不改变 STT/TTS。默认非流式调用 OpenRouter，JSON 提示词 + Pydantic 校验；若选择支持严格 JSON Schema 的模型，可启用 `OPENROUTER_STRUCTURED=true`。
 
 `.env.development` 中的 `ALLOWED_ORIGINS` 必须包含前端实际地址，端口也要一致；默认例子包含 3000、3002。API 还需要系统安装 FFmpeg。
 
@@ -69,11 +71,11 @@ MODEL_DIR="$PWD/models" apps/api/.venv/bin/python scripts/prepare_models.py
 corepack pnpm dev:api
 
 # 终端二，在仓库根目录
-cp apps/web/.env.example apps/web/.env.local
-corepack pnpm dev
+cp apps/web/.env.development.example apps/web/.env.development
+corepack pnpm dev:web
 ```
 
-前端 `NEXT_PUBLIC_API_URL` 只填写后端 origin，例如 `http://localhost:8000` 或 `https://api.example.com`，不包含 `/api`。修改它后重新启动/构建前端。**所有 `NEXT_PUBLIC_*` 都是公开信息，不得放模型密钥。**
+本地开发由 Next.js 将同源 `/backend/*` 代理到 `DEV_API_PROXY_TARGET`（默认 `http://127.0.0.1:8000`），HTTP 与 WebSocket 都走代理。生产构建不注册此规则；生产 `NEXT_PUBLIC_API_URL` 填后端 origin，例如 `https://api.example.com`，不包含 `/api`。修改配置后重新启动/构建前端。**所有 `NEXT_PUBLIC_*` 都是公开信息，不得放模型密钥。**
 
 关闭 Mock 后建立 HTTP + WebSocket 连接。真实语音为按住录音，松开提交（最多 20 秒）；手机访问需要可信 HTTPS。后端转码 → STT → OpenRouter → JSON 校验 → TTS → 音频就绪事件，浏览器开始播放时同步显示整条回复字幕。不是全双工实时语音，也没有逐字口型/字幕。
 
@@ -81,12 +83,12 @@ corepack pnpm dev
 
 配置相互独立，见 `apps/api/.env.example`：
 
-| 部分 | 免费本地路径 | 可扩展外部路径 |
-|---|---|---|
-| LLM | 可选 Ollama，`LLM_PROVIDER=ollama` | 默认 OpenRouter；也支持 `compatible` 文本接口 |
-| STT | `STT_PROVIDER=local`，faster-whisper CPU int8 | `compatible`，`POST {STT_BASE_URL}/audio/transcriptions` multipart |
-| TTS | `TTS_PROVIDER=local`，Piper，输出 WAV | `compatible`，`POST {TTS_BASE_URL}/audio/speech`，请求 WAV |
-| 字幕 | 已有回复文本，无额外费用 | 同样无需字幕 API |
+| 部分 | 免费本地路径                                  | 可扩展外部路径                                                     |
+| ---- | --------------------------------------------- | ------------------------------------------------------------------ |
+| LLM  | 可选 Ollama，`LLM_PROVIDER=ollama`            | 默认 OpenRouter；也支持 `compatible` 文本接口                      |
+| STT  | `STT_PROVIDER=local`，faster-whisper CPU int8 | `compatible`，`POST {STT_BASE_URL}/audio/transcriptions` multipart |
+| TTS  | `TTS_PROVIDER=local`，Piper，输出 WAV         | `compatible`，`POST {TTS_BASE_URL}/audio/speech`，请求 WAV         |
+| 字幕 | 已有回复文本，无额外费用                      | 同样无需字幕 API                                                   |
 
 这里的 compatible 指文档中列出的协议形状，不表示所有厂商的私有协议都能直接接入；例如返回异步任务 ID 或不同 JSON 音频字段的服务需要新增适配。OpenRouter 只承担本项目的文本 LLM，不假定它统一提供 STT/TTS。
 
@@ -116,7 +118,13 @@ flowchart LR
 结构化指令：
 
 ```json
-{"text":"给你看看这张照片。","emotion":"curious","action":"offer_photo","environment":"cafe_night","event":"reveal_photo"}
+{
+  "text": "给你看看这张照片。",
+  "emotion": "curious",
+  "action": "offer_photo",
+  "environment": "cafe_night",
+  "event": "reveal_photo"
+}
 ```
 
 有限枚举与本地素材 ID 映射。模型不能给任意 URL 或执行脚本；照片事件需当前输入涉及照片/摄影，雨窗变化需当前输入涉及雨/窗。正文和帧动画在语音开始播放时生效。协议说明见 `packages/contracts/README.md`。
@@ -153,3 +161,40 @@ HF_HOME="$PWD/models/huggingface" apps/api/.venv/bin/python scripts/smoke_speech
 如继续两周：先完成目标真机与真实服务验收、替换/明确许可的正式音色、测量实际阶段耗时；根据反馈再考虑自然 VAD、逐句语音与字幕。其余题目排除项仍不纳入这份 MVP。
 
 部署配置见 **[部署指南](docs/部署指南.md)**，AI 工具参与记录见 **[AI_USAGE.md](AI_USAGE.md)**，素材与依赖来源见 **[THIRD_PARTY.md](THIRD_PARTY.md)**。
+
+模型目录通过 `GET /api/models/openrouter` 读取，后端缓存 5 分钟；创建会话可传 `{ "model_id": "openrouter/free" }`。后端验证官方文本模型目录，将模型固定在当前会话，所有轮次使用该模型，不修改全局配置。选择器展示美元 / 百万 token 输入、输出价格；其他费用和最终价格以 OpenRouter 为准。官方可用不代表当前密钥、隐私设置或额度可调用；免费路由和具体免费模型仍可能限流、排队或返回不符合场景 JSON 的内容，需实际测试。目录不可用时显示错误并支持重试，不自动切到付费模型。
+
+参考：[官方免费路由](https://openrouter.ai/docs/guides/routing/routers/free-router)、[官方模型目录 API](https://openrouter.ai/docs/api/api-reference/models/list-all-models-and-their-properties)。
+
+首页已加入齿轮“场景设置”：Mock 可预览并切换三个本地场景；真实模式可输入场景提示，通过所选 OpenRouter 模型生成角色和首页文案，预览后应用，并用于后续对话。角色采用可配置插画，背景限咖啡馆/书店/车站模板，不包含文生图；刷新恢复默认场景。详见 [场景编辑与模型选择](docs/场景编辑与模型选择.md)。
+
+真实模式还可点击“开启对话”进入连续语音：本地检测开口后立即打断旧回复，停顿后自动提交，并提前更新角色表情和动作。切换场景、模型或离开页面会关闭麦克风。该模式沿用 STT → OpenRouter → TTS，有服务等待时间；Mock 继续使用无需权限的按住演示。
+
+## 本地联调与生产启动
+
+本地配置分别是 `apps/web/.env.development` 和 `apps/api/.env.development`，首次复制对应 `.example`，已有文件不要覆盖。前端本地只需 `DEV_API_PROXY_TARGET=http://127.0.0.1:8000`；模型密钥仍只填后端。开发浏览器 API 基址固定为 `/backend`，避免 `.env.local` 中遗留的生产地址误导开发请求。
+
+```bash
+# 一条命令启动本地前后端，Ctrl+C 一起停止（先停止已有同端口进程）
+corepack pnpm dev:local
+# 如当前环境不支持 Turbopack，可追加 --webpack
+
+# 或分别在两个终端启动
+corepack pnpm dev:api
+corepack pnpm dev:web
+```
+
+访问 `http://localhost:3002`，关闭 Mock 即调用本地后端真实接口。`/backend/api/health` 可检查代理；WebSocket 路径为 `/backend/ws/sessions/...`。Mock 不调用后端，与是否处于开发环境无关。若换前端端口，后端 `ALLOWED_ORIGINS` 也要添加对应 origin（WebSocket 仍校验来源）。
+
+生产前端通过 Vercel 的 Production 环境变量配置 `NEXT_PUBLIC_API_URL=https://你的后端域名`。本地验证生产构建时，可复制 `apps/web/.env.production.example` 到 `.env.production.local` 后修改实际地址；不要在 `.env.local` 中放开发专用地址，因为它也会影响生产构建。
+
+```bash
+corepack pnpm build
+corepack pnpm start:web
+# 独立后端生产进程，无 reload；或沿用 Docker/GitHub Actions 部署
+corepack pnpm start:api
+```
+
+`dev:api` 固定 APP_ENV=development，并忽略生产 APP_CONFIG_FILE；`start:api` 使用 APP_ENV=production，读取 `.env.production` 或已有 APP_CONFIG_FILE。前端代理只在 `next dev` 注册，`next build`/`next start` 不提供本地代理。开发代理超时为120秒，覆盖场景生成等待，不改变真实接口、上传或鉴权行为。
+
+自有服务器的生产后端默认绑定 `127.0.0.1:18473`（GitHub Variable `API_HOST_PORT` 可改），Docker 容器内部仍为8000。部署前检查端口冲突并生成对应 Nginx 配置；前端只部署 Vercel，服务器不启动本项目 Next.js。已有 Nginx 时保持 `MANAGED_HTTPS=false`，通过独立 API 域名接入 HTTPS/WSS。详见 [部署指南](docs/部署指南.md)。本地开发端口仍是3002/8000，与生产端口分开。

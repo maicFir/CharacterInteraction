@@ -7,7 +7,7 @@
   },
   "scripts": {
     "dev": "pnpm --dir apps/web dev",
-    "dev:api": "uv run --project apps/api --python 3.12 --frozen --extra local uvicorn app.main:app --app-dir apps/api --host 127.0.0.1 --port 8000 --reload --reload-dir apps/api/app",
+    "dev:api": "env -u APP_CONFIG_FILE APP_ENV=development uv run --project apps/api --python 3.12 --frozen --extra local uvicorn app.main:app --app-dir apps/api --host 127.0.0.1 --port 8000 --reload --reload-dir apps/api/app",
     "build": "pnpm --dir apps/web build",
     "typecheck": "pnpm --dir apps/web typecheck",
     "lint": "pnpm --dir apps/web lint",
@@ -17,7 +17,11 @@
     "format": "prettier --write apps/web/src apps/web/tests",
     "format:check": "prettier --check apps/web/src apps/web/tests",
     "start:mock": "docker compose -f infra/compose.yml up --build",
-    "assets": "python3 scripts/create_assets.py"
+    "assets": "python3 scripts/create_assets.py",
+    "dev:web": "pnpm --dir apps/web dev",
+    "dev:local": "node scripts/dev-local.mjs",
+    "start:web": "pnpm --dir apps/web start",
+    "start:api": "APP_ENV=production uv run --project apps/api --python 3.12 --frozen --extra local uvicorn app.main:app --app-dir apps/api --host 127.0.0.1 --port \"${API_HOST_PORT:-18473}\""
   },
   "devDependencies": {
     "prettier": "3.9.10"
