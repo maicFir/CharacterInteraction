@@ -12,7 +12,11 @@ from app.infrastructure.providers import Providers  # noqa: E402
 
 async def main():
     provider = Providers(
-        Settings(_env_file=None, piper_model=str(root / "models/piper/zh_CN-huayan-medium.onnx"))
+        Settings(
+            _env_file=None,
+            piper_model=str(root / "models/piper/zh_CN-huayan-medium.onnx"),
+            whisper_download_root=str(root / "models/huggingface/hub"),
+        )
     )
     try:
         speech = await provider.synthesize("你好，我叫米拉。窗外的雨还没有停。")

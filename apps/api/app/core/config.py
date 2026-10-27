@@ -14,21 +14,22 @@ class Settings(BaseSettings):
     app_env: Literal["development", "test", "production"] = "development"
     allowed_origins: str = "http://localhost:3000,http://127.0.0.1:3000"
     llm_provider: Literal["openrouter", "compatible", "ollama"] = "openrouter"
-    openrouter_api_key: str = ""
+    openrouter_api_key: str = Field(default="", repr=False)
     openrouter_model: str = ""
     openrouter_base_url: str = "https://openrouter.ai/api/v1"
     openrouter_structured: bool = False
     llm_base_url: str = ""
-    llm_api_key: str = ""
+    llm_api_key: str = Field(default="", repr=False)
     llm_model: str = ""
     stt_provider: Literal["local", "compatible"] = "local"
     stt_base_url: str = ""
-    stt_api_key: str = ""
+    stt_api_key: str = Field(default="", repr=False)
     stt_model: str = "whisper-1"
     whisper_model: str = "tiny"
+    whisper_download_root: str = "/models/huggingface/hub"
     tts_provider: Literal["local", "compatible"] = "local"
     tts_base_url: str = ""
-    tts_api_key: str = ""
+    tts_api_key: str = Field(default="", repr=False)
     tts_model: str = "tts-1"
     tts_voice: str = "alloy"
     piper_model: str = "/models/piper/zh_CN-huayan-medium.onnx"
@@ -63,6 +64,8 @@ def load_settings():
         app_env=environment,
     )
     # Relative local paths never depend on the caller's working directory.
-    if not Path(settings.piper_model).is_absolute():
-        settings.piper_model = str((API_ROOT / settings.piper_model).resolve())
+    for name in ("piper_model", "whisper_download_root"):
+        value = getattr(settings, name)
+        if not Path(value).is_absolute():
+            setattr(settings, name, str((API_ROOT / value).resolve()))
     return settings

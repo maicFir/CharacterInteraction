@@ -58,9 +58,9 @@ cp .env.development.example .env.development
 MODEL_DIR="$PWD/models" apps/api/.venv/bin/python scripts/prepare_models.py
 ```
 
-如官方模型站不可达，可以自行选择可信镜像，通过 `HF_ENDPOINT=https://hf-mirror.com` 配置。默认 Whisper tiny 做中文识别，Piper huayan medium 做中文非实时 TTS。文件下载一次后缓存；模型不提交到 Git。示例音色的上游模型卡将训练数据许可标为 Unknown，不能将其宣传为已经获得商用授权，详见 `THIRD_PARTY.md`；可换成你有许可的 Piper ONNX 音色或外部 TTS。
+如官方模型站不可达，可以自行选择可信镜像，通过 `HF_ENDPOINT=https://hf-mirror.com` 配置。默认 Whisper tiny 做中文识别，Piper huayan medium 做中文非实时 TTS。文件下载一次后缓存；模型不提交到 Git。后端通过 `WHISPER_DOWNLOAD_ROOT` 读取缓存，实际请求期间不自动下载模型；缺失时提示先准备模型。示例音色的上游模型卡将训练数据许可标为 Unknown，不能将其宣传为已经获得商用授权，详见 `THIRD_PARTY.md`；可换成你有许可的 Piper ONNX 音色或外部 TTS。
 
-默认本地模型没有按次 API 费用，仍消耗服务器 CPU/内存。语音风格与准确率受模型限制；Whisper tiny 适合低成本功能验证，需要更好的中文识别时可将 `WHISPER_MODEL` 改为 `base` 或 `small` 并重新准备模型。OpenRouter 是否收费取决于所选模型和账号，免费模型也可能有额度/速率限制。
+默认本地模型没有按次 API 费用，仍消耗服务器 CPU/内存。语音风格与准确率受模型限制；Whisper tiny 适合低成本功能验证，需要更好的中文识别时可将 `WHISPER_MODEL` 改为 `base` 或 `small` 并重新准备模型；本地准备命令也要传入同样的 `WHISPER_MODEL` 值，例如 `WHISPER_MODEL=small MODEL_DIR="$PWD/models" apps/api/.venv/bin/python scripts/prepare_models.py`。OpenRouter 是否收费取决于所选模型和账号，免费模型也可能有额度/速率限制。
 
 ### 3. 启动
 
@@ -128,7 +128,7 @@ corepack pnpm check  # 格式、ESLint、类型、测试、生产构建
 cd apps/api && uv run --frozen pytest -q
 ```
 
-本次本地已验证：Next.js 生产构建、Mock 音频可加载、9 项前端测试、19 项后端测试、桌面浏览器文字/音频/照片事件以及输入框聚焦样式。后端测试使用确定性的模拟模型服务和 HTTP transport，**不代表已经调用真实 OpenRouter**。
+本次本地已验证：Next.js 生产构建、Mock 音频可加载、9 项前端测试、20 项后端测试、桌面浏览器文字/音频/照片事件以及输入框聚焦样式。后端测试使用确定性的模拟模型服务和 HTTP transport，**不代表已经调用真实 OpenRouter**。
 
 本地免费 STT/TTS 已实际验证通过（Piper → WAV → FFmpeg → Whisper），中文人名仍可能识别不准。可复现：
 

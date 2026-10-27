@@ -129,9 +129,16 @@ class Providers:
             raise ProviderError("本地 STT 未安装，请安装 local 依赖并准备 Whisper 模型。") from exc
         with self._stt_lock:
             if self._whisper is None:
-                self._whisper = WhisperModel(
-                    self.cfg.whisper_model, device="cpu", compute_type="int8"
-                )
+                try:
+                    self._whisper = WhisperModel(
+                        self.cfg.whisper_model,
+                        device="cpu",
+                        compute_type="int8",
+                        download_root=self.cfg.whisper_download_root,
+                        local_files_only=True,
+                    )
+                except (OSError, ValueError, RuntimeError) as exc:
+                    raise ProviderError("本地 STT 模型尚未准备，请先运行模型准备命令。") from exc
             segments, _ = self._whisper.transcribe(
                 io.BytesIO(wav), language="zh", beam_size=1, condition_on_previous_text=False
             )

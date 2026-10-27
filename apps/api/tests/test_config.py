@@ -43,3 +43,14 @@ def test_local_model_path_is_relative_to_api_project(tmp_path, monkeypatch):
     monkeypatch.setenv("APP_ENV", "development")
     (tmp_path / ".env.development").write_text("PIPER_MODEL=weights/voice.onnx\n")
     assert config.load_settings().piper_model == str(tmp_path / "weights/voice.onnx")
+
+
+def test_local_whisper_cache_is_relative_to_api_project(tmp_path, monkeypatch):
+    monkeypatch.setattr(config, "API_ROOT", tmp_path)
+    monkeypatch.delenv("APP_CONFIG_FILE", raising=False)
+    monkeypatch.delenv("WHISPER_DOWNLOAD_ROOT", raising=False)
+    monkeypatch.setenv("APP_ENV", "development")
+    (tmp_path / ".env.development").write_text("WHISPER_DOWNLOAD_ROOT=weights/whisper\n")
+    assert getattr(config.load_settings(), "whisper_download_root", None) == str(
+        tmp_path / "weights/whisper"
+    )
