@@ -412,5 +412,9 @@ corepack pnpm start:api
 - [https://character-interaction-ifke773ed-maicfirs-projects.vercel.app](https://character-interaction-ifke773ed-maicfirs-projects.vercel.app/)
 
 ## 演示视频
-<video src="https://assets.spatial-ai.iruns.xyz/ai3d/fd853414-bcf3-4352-a964-106782798c77/video/after-rain-demo.mp4" controls width="100%"></video>
+
+[▶ 点击观看演示视频（MP4）](https://assets.spatial-ai.iruns.xyz/ai3d/fd853414-bcf3-4352-a964-106782798c77/video/after-rain-demo.mp4)
+
+视频通过外部链接打开；GitHub README 不直接嵌入此外部视频播放器。
+
 注意：预览地址为测试环境，不保证长期可用。由于服务器部署空间受限，因此后端api服务暂时没有部署，因此后端api暂无法使用，只能本地
