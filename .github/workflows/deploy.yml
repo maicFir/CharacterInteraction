@@ -40,23 +40,13 @@ jobs:
           HF_ENDPOINT: ${{ vars.HF_ENDPOINT }}
           MANAGED_HTTPS: ${{ vars.MANAGED_HTTPS }}
         run: python3 scripts/write_deploy_config.py
-      - name: Configure pinned SSH host and deploy key
+      - name: Configure and validate pinned SSH host and deploy key
         env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_PORT: ${{ secrets.SSH_PORT }}
           SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
           SSH_KNOWN_HOSTS: ${{ secrets.SSH_KNOWN_HOSTS }}
-        run: |
-          python3 - <<'PY'
-          import os
-          from pathlib import Path
-          ssh=Path.home()/'.ssh'
-          ssh.mkdir(mode=0o700,exist_ok=True)
-          for name,key in [('id_ed25519','SSH_PRIVATE_KEY'),('known_hosts','SSH_KNOWN_HOSTS')]:
-              value=os.environ.get(key,'')
-              if not value.strip(): raise SystemExit(f'Missing secret: {key}')
-              path=ssh/name
-              path.write_text(value.rstrip()+'\n')
-              path.chmod(0o600)
-          PY
+        run: python3 scripts/configure_deploy_ssh.py
       - name: Upload and deploy versioned backend release
         env:
           SSH_HOST: ${{ secrets.SSH_HOST }}
@@ -71,8 +61,8 @@ jobs:
           trap 'rm -f deploy.tgz infra/runtime.json infra/domain.env infra/nginx.generated.conf' EXIT
           tar --exclude='.venv' --exclude='__pycache__' --exclude='.pytest_cache' --exclude='.env*' -czf deploy.tgz apps/api/app apps/api/pyproject.toml apps/api/uv.lock infra/Dockerfile.api infra/compose.server.yml infra/Caddyfile infra/runtime.json infra/domain.env infra/nginx.generated.conf scripts/check_deploy_ports.py scripts/prepare_models.py
           chmod 600 deploy.tgz
-          scp -o BatchMode=yes -o StrictHostKeyChecking=yes -P "$SSH_PORT" deploy.tgz "$SSH_USER@$SSH_HOST:/tmp/after-rain-$GITHUB_SHA.tgz"
-          ssh -o BatchMode=yes -o StrictHostKeyChecking=yes -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" bash -s -- "$GITHUB_SHA" "$GITHUB_RUN_ID" < scripts/deploy_remote.sh
+          scp -i "$HOME/.ssh/id_ed25519" -o IdentitiesOnly=yes -o UserKnownHostsFile="$HOME/.ssh/known_hosts" -o BatchMode=yes -o StrictHostKeyChecking=yes -P "$SSH_PORT" deploy.tgz "$SSH_USER@$SSH_HOST:/tmp/after-rain-$GITHUB_SHA.tgz"
+          ssh -i "$HOME/.ssh/id_ed25519" -o IdentitiesOnly=yes -o UserKnownHostsFile="$HOME/.ssh/known_hosts" -o BatchMode=yes -o StrictHostKeyChecking=yes -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" bash -s -- "$GITHUB_SHA" "$GITHUB_RUN_ID" < scripts/deploy_remote.sh
   vercel:
     needs: checks
     if: vars.DEPLOY_VERCEL == 'true' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
