@@ -3,8 +3,7 @@
 **/.next
 **/.venv
 **/__pycache__
-**/.env
-**/.env.local
+**/.env*
 /models
 /apps/api/models
 tmp
@@ -12,3 +11,6 @@ output
 *.pdf
 .DS_Store
 infra/runtime.json
+
+infra/domain.env
+infra/nginx.generated.conf

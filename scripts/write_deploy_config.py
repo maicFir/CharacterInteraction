@@ -10,6 +10,11 @@ port = os.environ.get("API_HOST_PORT") or "18473"
 if not re.fullmatch(r"[0-9]+", port) or not 1024 <= int(port) <= 65535:
     raise SystemExit("API_HOST_PORT must be an integer between 1024 and 65535")
 port = str(int(port))
+release_sha = os.environ.get("GITHUB_SHA", "")
+if release_sha and not re.fullmatch(r"[a-f0-9]{40}", release_sha):
+    raise SystemExit("GITHUB_SHA must be a full commit SHA")
+image = f"after-rain-api:{release_sha or 'latest'}"
+
 
 required = ["OPENROUTER_API_KEY", "ALLOWED_ORIGINS"]
 for name in required:
@@ -55,7 +60,7 @@ if managed not in ("true", "false"):
 if managed == "true" and domain == "api.example.com":
     raise SystemExit("Set your real API_DOMAIN before enabling managed HTTPS")
 Path("infra/domain.env").write_text(
-    f"API_DOMAIN={domain}\nHF_ENDPOINT={endpoint}\nMANAGED_HTTPS={managed}\nAPI_HOST_PORT={port}\n"
+    f"API_DOMAIN={domain}\nHF_ENDPOINT={endpoint}\nMANAGED_HTTPS={managed}\nAPI_HOST_PORT={port}\nAPI_IMAGE={image}\n"
 )
 
 # Review and install this dedicated server block in the existing Nginx separately.

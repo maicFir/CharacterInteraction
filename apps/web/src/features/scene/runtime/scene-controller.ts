@@ -37,6 +37,8 @@ export class SceneController {
       ...initial,
       definition: useScene.getState().definition,
       showCharacter: useScene.getState().showCharacter,
+      musicEnabled: useScene.getState().musicEnabled,
+      musicError: useScene.getState().musicError,
       selectedModel: useScene.getState().selectedModel,
       entered: true,
       mock,

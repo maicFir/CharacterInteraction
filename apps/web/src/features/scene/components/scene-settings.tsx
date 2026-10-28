@@ -13,6 +13,8 @@ export function SceneSettings({
   onClose: () => void;
   onApply: (scene: SceneDefinition) => void;
 }) {
+  const musicEnabled = useScene((state) => state.musicEnabled);
+  const musicError = useScene((state) => state.musicError);
   const showCharacter = useScene((state) => state.showCharacter);
   const mock = useScene((state) => state.mock);
   const current = useScene((state) => state.definition);
@@ -63,6 +65,18 @@ export function SceneSettings({
           label="显示角色"
           checked={showCharacter}
           onChange={(value) => patchScene({ showCharacter: value })}
+        />
+      </div>
+      <div className="character-visibility">
+        <div>
+          <strong>背景音乐</strong>
+          <p>随机播放本地音乐；录音或连续语音对话时自动暂停。</p>
+          {musicError && <p role="status">{musicError}</p>}
+        </div>
+        <Toggle
+          label="背景音乐"
+          checked={musicEnabled}
+          onChange={(value) => patchScene({ musicEnabled: value, musicError: '' })}
         />
       </div>
       {mock ? (

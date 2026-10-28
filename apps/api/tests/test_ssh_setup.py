@@ -48,7 +48,7 @@ def test_known_hosts_for_another_host_is_not_silently_relabelled(tmp_path, publi
 
 
 def test_malformed_key_is_rejected_before_scp(tmp_path):
-    with pytest.raises(ValueError, match="公钥"):
+    with pytest.raises(ValueError, match="公钥格式无效或不完整"):
         setup.configure(
             tmp_path / "ssh",
             "server.example.com",
@@ -84,3 +84,19 @@ def test_existing_hashed_known_hosts_record_is_supported(tmp_path, public_key):
         tmp_path / "ssh", "server.example.com", "2222", "test-private-key", source.read_text()
     )
     assert "|1|" in (tmp_path / "ssh/known_hosts").read_text()
+
+
+@pytest.mark.parametrize(
+    "content",
+    ["SSH_KNOWN_HOSTS=ssh-ed25519 AAAA", '"ssh-ed25519 AAAA"', "SHA256:just-a-fingerprint"],
+)
+def test_input_shape_errors_are_not_reported_as_endpoint_mismatches(tmp_path, content):
+    with pytest.raises(ValueError, match="内容格式"):
+        setup.configure(tmp_path / "ssh", "server.example.com", "22", "test-private-key", content)
+
+
+def test_bom_from_pasting_does_not_hide_a_valid_public_key(tmp_path, public_key):
+    setup.configure(
+        tmp_path / "ssh", "server.example.com", "22", "test-private-key", "\ufeff" + public_key
+    )
+    assert (tmp_path / "ssh/known_hosts").read_text().startswith("server.example.com ssh-ed25519 ")

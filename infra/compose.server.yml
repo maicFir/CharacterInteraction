@@ -1,6 +1,7 @@
 name: after-rain
 services:
   api:
+    image: ${API_IMAGE:-after-rain-api:latest}
     build:
       context: ..
       dockerfile: infra/Dockerfile.api

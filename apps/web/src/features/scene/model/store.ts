@@ -4,6 +4,8 @@ import type { Phase, Reply } from './turns';
 type SceneState = {
   definition: SceneDefinition;
   showCharacter: boolean;
+  musicEnabled: boolean;
+  musicError: string;
   voiceEnabled: boolean;
   voiceStatus: 'off' | 'starting' | 'listening' | 'processing';
   voiceLevel: number;
@@ -29,13 +31,15 @@ type SceneState = {
 export const initial: SceneState = {
   definition: defaultScene,
   showCharacter: true,
+  musicEnabled: true,
+  musicError: '',
   voiceEnabled: false,
   voiceStatus: 'off',
   voiceLevel: 0,
   reactionReady: false,
   selectedModel: '',
   mock: true,
-  entered: false,
+  entered: true,
   connected: false,
   phase: 'idle',
   stage: '等你坐下',

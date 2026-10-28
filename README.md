@@ -198,3 +198,5 @@ corepack pnpm start:api
 `dev:api` 固定 APP_ENV=development，并忽略生产 APP_CONFIG_FILE；`start:api` 使用 APP_ENV=production，读取 `.env.production` 或已有 APP_CONFIG_FILE。前端代理只在 `next dev` 注册，`next build`/`next start` 不提供本地代理。开发代理超时为120秒，覆盖场景生成等待，不改变真实接口、上传或鉴权行为。
 
 自有服务器的生产后端默认绑定 `127.0.0.1:18473`（GitHub Variable `API_HOST_PORT` 可改），Docker 容器内部仍为8000。部署前检查端口冲突并生成对应 Nginx 配置；前端只部署 Vercel，服务器不启动本项目 Next.js。已有 Nginx 时保持 `MANAGED_HTTPS=false`，通过独立 API 域名接入 HTTPS/WSS。详见 [部署指南](docs/部署指南.md)。本地开发端口仍是3002/8000，与生产端口分开。
+
+后端生产部署现由 GitHub Actions 构建镜像，通过 SSH 流式导入服务器后启动；服务器不再现场构建。镜像传输前检查可用空间（默认至少3GiB，并按镜像大小提高预算），不足会提前停止。该流程不自动清理其他项目或数据卷；已有磁盘不足仍需先解决容量问题。

@@ -117,3 +117,10 @@ def test_production_archive_keeps_backend_models_and_excludes_local_environment(
     assert "apps/api/app/models/scene_definition.py" in names
     assert "scripts/check_deploy_ports.py" in names
     assert not any("apps/web" in name or ".env.development" in name for name in names)
+
+
+def test_ci_release_pins_image_to_the_commit(tmp_path):
+    sha = "a" * 40
+    result = run_config(tmp_path, GITHUB_SHA=sha)
+    assert result.returncode == 0, result.stderr
+    assert f"API_IMAGE=after-rain-api:{sha}" in (tmp_path / "infra/domain.env").read_text()

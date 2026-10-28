@@ -2,12 +2,12 @@
 import { useState, type CSSProperties } from 'react';
 import { useSceneExperience } from './hooks/use-scene-experience';
 import { useScene } from './model/store';
+import { BackgroundMusic } from './components/background-music';
 import { SceneAtmosphere } from './components/scene-atmosphere';
 import { SceneHeader } from './components/scene-header';
 import { CharacterStage } from './components/character-stage';
 import { PhotoCard } from './components/photo-card';
 import { ConversationPanel } from './components/conversation-panel';
-import { EntryOverlay } from './components/entry-overlay';
 import { SceneSettings } from './components/scene-settings';
 import { ExperienceDialog } from './components/experience-dialog';
 
@@ -15,7 +15,7 @@ interface SceneState {
   environment: string;
 }
 
-export function Scene() {
+export function Scene({ musicTracks }: { musicTracks: string[] }) {
   const { controller, reconnect, selectModel, applyScene } = useSceneExperience();
   const showCharacter = useScene((state) => state.showCharacter);
   const definition = useScene((state) => state.definition);
@@ -32,6 +32,7 @@ export function Scene() {
       }
       className={`experience ${environment === 'rain_window' ? 'rain-close' : ''}`}
     >
+      <BackgroundMusic tracks={musicTracks} />
       <SceneAtmosphere />
       <SceneHeader
         onOpenSettings={() => setSettings(true)}
@@ -41,7 +42,6 @@ export function Scene() {
       {showCharacter && <CharacterStage />}
       <PhotoCard />
       <ConversationPanel controller={controller} onReconnect={reconnect} />
-      <EntryOverlay />
       {settings && <SceneSettings onClose={() => setSettings(false)} onApply={applyScene} />}
       {details ? (
         <ExperienceDialog onClose={() => setDetails(false)} controller={controller} />

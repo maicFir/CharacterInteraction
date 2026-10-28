@@ -35,12 +35,15 @@ rollback() {
   echo 'Deployment failed. Attempting previous-release rollback.'
   if [[ -n "$previous" && -d "$previous" ]]; then
     cd "$previous"
-    docker compose --env-file infra/domain.env -f infra/compose.server.yml up -d --build api
+    docker compose --env-file infra/domain.env -f infra/compose.server.yml up -d --no-build --pull never api
   fi
 }
+# The runner has already loaded this immutable image; never build on the small server.
+image="$(sed -n 's/^API_IMAGE=//p' infra/domain.env)"
+[[ "$image" == "after-rain-api:$release_sha" ]] || { echo 'Release image tag does not match commit.'; exit 1; }
+docker image inspect "$image" >/dev/null
 trap rollback ERR
-"${compose[@]}" build api
-"${compose[@]}" up -d --wait --wait-timeout 120
+"${compose[@]}" up -d --no-build --wait --wait-timeout 120
 # Only local speech providers require model weights. Cached downloads are reused in the volume.
 "${compose[@]}" exec -T api .venv/bin/python prepare_models.py
 curl --fail --retry 5 --retry-delay 3 "http://127.0.0.1:$api_port/api/health"
